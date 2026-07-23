@@ -178,7 +178,7 @@ public class AssignmentService {
     // We get the last finished event for the apartment
     Optional<Event> lastFinishedEventOpt =
         eventRepository.findFirstByCreatedByUsernameAndApartmentIdAndStateOrderByEndDateDesc(
-            AuthUtils.getUsername(), apartmentId, EventState.FINISHED);
+            AuthUtils.getUsername(), apartmentId, EventState.FINISHED.toString());
     // If there is no last finished event, we can modify the assignments (the event to modify has to
     // be pending or in progress)
     if (lastFinishedEventOpt.isEmpty()) {
@@ -203,7 +203,7 @@ public class AssignmentService {
             AuthUtils.getAuthUser().getId(),
             apartmentId,
             event.getStartDate(),
-            EventState.IN_PROGRESS);
+            EventState.IN_PROGRESS.toString());
     // If no next event in progress after the last finished one, we are good to go
     if (eventInProgressAfterLastFinishedOpt.isPresent()) {
       log.error(

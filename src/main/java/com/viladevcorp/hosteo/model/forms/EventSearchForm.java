@@ -13,8 +13,8 @@ public class EventSearchForm {
 
   private Set<UUID> apartmentIds;
   private String apartmentName;
-  private Set<EventType> types;
-  private Set<EventState> states;
+  private Set<String> types;
+  private Set<String> states;
   private Instant startDate;
   private Instant endDate;
   private int pageNumber = -1;

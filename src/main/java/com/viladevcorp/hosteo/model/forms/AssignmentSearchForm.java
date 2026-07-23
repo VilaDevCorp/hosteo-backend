@@ -13,7 +13,7 @@ public class AssignmentSearchForm {
 
   private String taskName;
 
-  private AssignmentState state;
+  private String state;
 
   private int pageNumber;
 

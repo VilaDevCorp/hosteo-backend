@@ -1,8 +1,6 @@
 package com.viladevcorp.hosteo.repository;
 
 import com.viladevcorp.hosteo.model.Event;
-import com.viladevcorp.hosteo.model.types.EventState;
-import com.viladevcorp.hosteo.model.types.EventType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
@@ -31,8 +29,8 @@ public interface EventRepository extends EntityRepository<Event> {
   List<Event> advancedSearch(
       @Param("username") String username,
       @Param("apartmentName") String apartmentName,
-      @Param("states") Set<EventState> states,
-      @Param("types") Set<EventType> types,
+      @Param("states") Set<String> states,
+      @Param("types") Set<String> types,
       @Param("startDate") Instant startDate,
       @Param("endDate") Instant endDate,
       Pageable pageable);
@@ -49,8 +47,8 @@ public interface EventRepository extends EntityRepository<Event> {
   int advancedCount(
       @Param("username") String username,
       @Param("apartmentName") String apartmentName,
-      @Param("states") Set<EventState> states,
-      @Param("types") Set<EventType> types,
+      @Param("states") Set<String> states,
+      @Param("types") Set<String> types,
       @Param("startDate") Instant startDate,
       @Param("endDate") Instant endDate);
 
@@ -66,17 +64,17 @@ public interface EventRepository extends EntityRepository<Event> {
   List<Event> findEventsBetween(
       String username, UUID apartmentId, Instant startDate, Instant endDate, UUID excludeEventId);
 
-  boolean existsEventByApartmentIdAndState(UUID apartmentId, EventState stateF);
+  boolean existsEventByApartmentIdAndState(UUID apartmentId, String state);
 
   Optional<Event> findFirstEventByCreatedByUsernameAndApartmentIdAndStateOrderByEndDateDesc(
       @Param("username") String username,
       @Param("apartmentId") UUID apartmentId,
-      @Param("state") EventState state);
+      @Param("state") String state);
 
   Optional<Event> findFirstEventByCreatedByUsernameAndApartmentIdAndStateOrderByEndDateAsc(
       @Param("username") String username,
       @Param("apartmentId") UUID apartmentId,
-      @Param("state") EventState state);
+      @Param("state") String state);
 
   @Query(
       value =
@@ -99,7 +97,7 @@ public interface EventRepository extends EntityRepository<Event> {
       @Param("userId") UUID userId,
       @Param("apartmentId") UUID apartmentId,
       @Param("dateParam") Instant dateParam,
-      @Param("state") EventState state);
+      @Param("state") String state);
 
   @Query(
       value =
@@ -126,5 +124,5 @@ public interface EventRepository extends EntityRepository<Event> {
 
   @EntityGraph(attributePaths = {"assignments"})
   Optional<Event> findFirstByCreatedByUsernameAndApartmentIdAndStateOrderByEndDateDesc(
-      String username, UUID apartmentId, EventState state);
+      String username, UUID apartmentId, String state);
 }

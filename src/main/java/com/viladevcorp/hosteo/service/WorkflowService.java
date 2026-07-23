@@ -55,7 +55,7 @@ public class WorkflowService {
     Apartment apartment = apartmentOpt.get();
 
     // If the apartment has an event in progress, is occupied
-    if (eventRepository.existsEventByApartmentIdAndState(id, EventState.IN_PROGRESS)) {
+    if (eventRepository.existsEventByApartmentIdAndState(id, EventState.IN_PROGRESS.toString())) {
       apartment.setState(ApartmentState.OCCUPIED);
       apartmentRepository.save(apartment);
       return;
@@ -81,7 +81,7 @@ public class WorkflowService {
     // Get the last finished event of the apartment
     Optional<Event> lastFinishedEvent =
         eventRepository.findFirstByCreatedByUsernameAndApartmentIdAndStateOrderByEndDateDesc(
-            AuthUtils.getUsername(), id, EventState.FINISHED);
+            AuthUtils.getUsername(), id, EventState.FINISHED.toString());
 
     // If not finished event found, the apartment is ready
     if (lastFinishedEvent.isEmpty()) {

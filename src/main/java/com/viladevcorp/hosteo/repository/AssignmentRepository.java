@@ -1,7 +1,6 @@
 package com.viladevcorp.hosteo.repository;
 
 import com.viladevcorp.hosteo.model.Assignment;
-import com.viladevcorp.hosteo.model.types.AssignmentState;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -23,7 +22,7 @@ public interface AssignmentRepository extends EntityRepository<Assignment> {
   List<Assignment> advancedSearch(
       @Param("username") String username,
       @Param("taskName") String taskName,
-      @Param("state") AssignmentState state,
+      @Param("state") String state,
       Pageable pageable);
 
   @Query(
@@ -33,7 +32,7 @@ public interface AssignmentRepository extends EntityRepository<Assignment> {
   int advancedCount(
       @Param("username") String username,
       @Param("taskName") String taskName,
-      @Param("state") AssignmentState state);
+      @Param("state") String state);
 
   @Query(
       "SELECT a FROM Assignment a WHERE a.task.id = :taskId AND a.createdBy.username = :username")
@@ -72,7 +71,7 @@ public interface AssignmentRepository extends EntityRepository<Assignment> {
           + "AND (:state IS NULL OR a.state = :state) AND (CAST(:startDate AS TIMESTAMP) IS NULL OR a.startDate >= :startDate) "
           + "AND (CAST(:endDate AS TIMESTAMP) IS NULL OR a.startDate < :endDate)")
   Set<Assignment> findByApartmentAndStateAndDateRange(
-      String username, UUID apartmentId, AssignmentState state, Instant startDate, Instant endDate);
+      String username, UUID apartmentId, String state, Instant startDate, Instant endDate);
 
   @Query(
       "SELECT a FROM Assignment a WHERE a.createdBy.username = :username  "
