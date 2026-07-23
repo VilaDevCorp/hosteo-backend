@@ -26,6 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PutMapping;
 
 @Slf4j
 @RestController
@@ -107,7 +108,7 @@ public class AssignmentController {
     return handleAssignmentOperation(() -> assignmentService.createAssignment(form));
   }
 
-  @PatchMapping("/assignment")
+  @PutMapping("/assignment")
   public ResponseEntity<ApiResponse<AssignmentDto>> updateAssignment(
       @Valid @RequestBody AssignmentUpdateForm form, BindingResult bindingResult) {
     log.info("[AssignmentController.updateAssignment] - Updating assignment");

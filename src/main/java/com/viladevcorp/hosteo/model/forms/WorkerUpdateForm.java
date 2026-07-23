@@ -4,7 +4,6 @@ import java.util.UUID;
 
 import com.viladevcorp.hosteo.model.types.Language;
 
-import com.viladevcorp.hosteo.model.types.WorkerState;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;

@@ -4,6 +4,8 @@ import com.viladevcorp.hosteo.model.Task;
 import com.viladevcorp.hosteo.model.types.CategoryEnum;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.viladevcorp.hosteo.model.types.TaskType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -23,11 +25,11 @@ public class TaskDto extends BaseEntityDto {
 
   private String name;
 
+  private TaskType type;
+
   private CategoryEnum category;
 
   private int duration;
-
-  private boolean extra;
 
   private List<String> steps = new ArrayList<>();
 }

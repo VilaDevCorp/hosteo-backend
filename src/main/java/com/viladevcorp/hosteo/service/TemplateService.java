@@ -2,6 +2,7 @@ package com.viladevcorp.hosteo.service;
 
 import com.viladevcorp.hosteo.model.PageMetadata;
 import com.viladevcorp.hosteo.model.Template;
+import com.viladevcorp.hosteo.model.dto.TemplateDto;
 import com.viladevcorp.hosteo.model.forms.TemplateCreateForm;
 import com.viladevcorp.hosteo.model.forms.TemplateSearchForm;
 import com.viladevcorp.hosteo.model.forms.TemplateUpdateForm;
@@ -31,7 +32,7 @@ public class TemplateService {
     this.templateRepository = templateRepository;
   }
 
-  public Template createTemplate(TemplateCreateForm form) {
+  public TemplateDto createTemplate(TemplateCreateForm form) {
     Template template =
         Template.builder()
             .name(form.getName())
@@ -41,16 +42,20 @@ public class TemplateService {
             .steps(form.getSteps())
             .build();
 
-    return templateRepository.save(template);
+    return new TemplateDto(templateRepository.save(template));
   }
 
-  public Template updateTemplate(TemplateUpdateForm form) throws InstanceNotFoundException {
-    Template template = getTemplateById(form.getId());
+  public TemplateDto updateTemplate(TemplateUpdateForm form) throws InstanceNotFoundException {
+    Template template = getTemplateEntityById(form.getId());
     BeanUtils.copyProperties(form, template, "id");
-    return templateRepository.save(template);
+    return new TemplateDto(templateRepository.save(template));
   }
 
-  public Template getTemplateById(UUID id) throws InstanceNotFoundException {
+  public TemplateDto getTemplateById(UUID id) throws InstanceNotFoundException {
+    return new TemplateDto(getTemplateEntityById(id));
+  }
+
+  private Template getTemplateEntityById(UUID id) throws InstanceNotFoundException {
     Optional<Template> template = templateRepository.findById(id, AuthUtils.getUsername());
     if (template.isEmpty()) {
       throw new InstanceNotFoundException("Template not found with id: " + id);
@@ -58,14 +63,17 @@ public class TemplateService {
     return template.get();
   }
 
-  public List<Template> findTemplates(TemplateSearchForm form) {
+  public List<TemplateDto> findTemplates(TemplateSearchForm form) {
     String name =
         form.getName() == null || form.getName().isEmpty()
             ? null
             : "%" + form.getName().toLowerCase() + "%";
     PageRequest pageRequest =
         ServiceUtils.createPageRequest(form.getPageNumber(), form.getPageSize());
-    return templateRepository.advancedSearch(AuthUtils.getUsername(), name, pageRequest);
+    return templateRepository.advancedSearch(AuthUtils.getUsername(), name, pageRequest)
+        .stream()
+        .map(TemplateDto::new)
+        .toList();
   }
 
   public PageMetadata getTemplatesMetadata(TemplateSearchForm form) {
@@ -79,7 +87,7 @@ public class TemplateService {
   }
 
   public void deleteTemplate(UUID id) throws InstanceNotFoundException {
-    Template template = getTemplateById(id);
+    Template template = getTemplateEntityById(id);
     templateRepository.delete(template);
   }
 }

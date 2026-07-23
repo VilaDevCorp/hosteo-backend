@@ -2,7 +2,7 @@ package com.viladevcorp.hosteo.controller;
 
 import com.viladevcorp.hosteo.model.Page;
 import com.viladevcorp.hosteo.model.PageMetadata;
-import com.viladevcorp.hosteo.model.Template;
+import com.viladevcorp.hosteo.model.dto.TemplateDto;
 import com.viladevcorp.hosteo.model.forms.TemplateCreateForm;
 import com.viladevcorp.hosteo.model.forms.TemplateSearchForm;
 import com.viladevcorp.hosteo.model.forms.TemplateUpdateForm;
@@ -20,7 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -40,34 +40,34 @@ public class TemplateController {
   }
 
   @PostMapping("/template")
-  public ResponseEntity<ApiResponse<Template>> createTemplate(
+  public ResponseEntity<ApiResponse<TemplateDto>> createTemplate(
       @Valid @RequestBody TemplateCreateForm form, BindingResult bindingResult) {
     log.info("[TemplateController.createTemplate] - Creating template");
 
-    ResponseEntity<ApiResponse<Template>> validationResponse =
+    ResponseEntity<ApiResponse<TemplateDto>> validationResponse =
         ValidationUtils.handleFormValidation(bindingResult);
     if (validationResponse != null) {
       return validationResponse;
     }
 
-    Template template = templateService.createTemplate(form);
+    TemplateDto template = templateService.createTemplate(form);
     log.info("[TemplateController.createTemplate] - Template created successfully");
     return ResponseEntity.ok().body(new ApiResponse<>(template));
   }
 
-  @PatchMapping("/template")
-  public ResponseEntity<ApiResponse<Template>> updateTemplate(
+  @PutMapping("/template")
+  public ResponseEntity<ApiResponse<TemplateDto>> updateTemplate(
       @Valid @RequestBody TemplateUpdateForm form, BindingResult bindingResult) {
     log.info("[TemplateController.updateTemplate] - Updating template");
 
-    ResponseEntity<ApiResponse<Template>> validationResponse =
+    ResponseEntity<ApiResponse<TemplateDto>> validationResponse =
         ValidationUtils.handleFormValidation(bindingResult);
     if (validationResponse != null) {
       return validationResponse;
     }
 
     try {
-      Template template = templateService.updateTemplate(form);
+      TemplateDto template = templateService.updateTemplate(form);
       log.info("[TemplateController.updateTemplate] - Template updated successfully");
       return ResponseEntity.ok().body(new ApiResponse<>(template));
     } catch (InstanceNotFoundException e) {
@@ -77,11 +77,11 @@ public class TemplateController {
   }
 
   @GetMapping("/template/{id}")
-  public ResponseEntity<ApiResponse<Template>> getTemplate(@PathVariable UUID id) {
+  public ResponseEntity<ApiResponse<TemplateDto>> getTemplate(@PathVariable UUID id) {
     log.info("[TemplateController.getTemplate] - Fetching template with id: {}", id);
 
     try {
-      Template template = templateService.getTemplateById(id);
+      TemplateDto template = templateService.getTemplateById(id);
       log.info("[TemplateController.getTemplate] - Template found successfully");
       return ResponseEntity.ok().body(new ApiResponse<>(template));
     } catch (InstanceNotFoundException e) {
@@ -91,13 +91,13 @@ public class TemplateController {
   }
 
   @PostMapping("/template/search")
-  public ResponseEntity<ApiResponse<Page<Template>>> searchTemplates(
+  public ResponseEntity<ApiResponse<Page<TemplateDto>>> searchTemplates(
       @RequestBody TemplateSearchForm form) {
     log.info("[TemplateController.searchTemplates] - Searching templates");
 
-    List<Template> templates = templateService.findTemplates(form);
+    List<TemplateDto> templates = templateService.findTemplates(form);
     PageMetadata pageMetadata = templateService.getTemplatesMetadata(form);
-    Page<Template> page =
+    Page<TemplateDto> page =
         new Page<>(templates, pageMetadata.getTotalPages(), pageMetadata.getTotalRows());
 
     log.info("[TemplateController.searchTemplates] - Found {} templates", templates.size());

@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.UUID;
 
 import com.viladevcorp.hosteo.model.dto.WorkerDto;
-import com.viladevcorp.hosteo.model.types.WorkerState;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -354,37 +353,37 @@ class WorkerControllerTest extends BaseControllerTest {
         assertTrue(worker.getName().toLowerCase().contains("john"));
       }
     }
-  }
 
-  @Test
-  void When_SearchWorkersByVisible_Ok() throws Exception {
-    TestUtils.injectUserSession(ACTIVE_USER_USERNAME_1, userRepository);
-    WorkerSearchForm searchFormObj = new WorkerSearchForm();
-    searchFormObj.setVisible(true);
-    searchFormObj.setPageNumber(-1);
-    String resultString =
-        mockMvc
-            .perform(
-                post("/api/worker/search")
-                    .contentType("application/json")
-                    .content(objectMapper.writeValueAsString(searchFormObj)))
-            .andExpect(status().isOk())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
-    ApiResponse<Page<WorkerDto>> result = null;
-    TypeReference<ApiResponse<Page<WorkerDto>>> typeReference =
-        new TypeReference<ApiResponse<Page<WorkerDto>>>() {};
-    try {
-      result = objectMapper.readValue(resultString, typeReference);
-    } catch (Exception e) {
-      fail("Error parsing response");
-    }
-    Page<WorkerDto> returnedPage = result.getData();
-    List<WorkerDto> workers = returnedPage.getContent();
-    assertEquals(3, workers.size());
-    for (WorkerDto worker : workers) {
-      assertTrue(worker.isVisible());
+    @Test
+    void When_SearchWorkersByVisible_Ok() throws Exception {
+      TestUtils.injectUserSession(ACTIVE_USER_USERNAME_1, userRepository);
+      WorkerSearchForm searchFormObj = new WorkerSearchForm();
+      searchFormObj.setVisible(true);
+      searchFormObj.setPageNumber(-1);
+      String resultString =
+          mockMvc
+              .perform(
+                  post("/api/worker/search")
+                      .contentType("application/json")
+                      .content(objectMapper.writeValueAsString(searchFormObj)))
+              .andExpect(status().isOk())
+              .andReturn()
+              .getResponse()
+              .getContentAsString();
+      ApiResponse<Page<WorkerDto>> result = null;
+      TypeReference<ApiResponse<Page<WorkerDto>>> typeReference =
+          new TypeReference<ApiResponse<Page<WorkerDto>>>() {};
+      try {
+        result = objectMapper.readValue(resultString, typeReference);
+      } catch (Exception e) {
+        fail("Error parsing response");
+      }
+      Page<WorkerDto> returnedPage = result.getData();
+      List<WorkerDto> workers = returnedPage.getContent();
+      assertEquals(3, workers.size());
+      for (WorkerDto worker : workers) {
+        assertTrue(worker.isVisible());
+      }
     }
   }
 

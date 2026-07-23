@@ -2,7 +2,6 @@ package com.viladevcorp.hosteo.model.dto;
 
 import com.viladevcorp.hosteo.model.Worker;
 import com.viladevcorp.hosteo.model.types.Language;
-import com.viladevcorp.hosteo.model.types.WorkerState;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
