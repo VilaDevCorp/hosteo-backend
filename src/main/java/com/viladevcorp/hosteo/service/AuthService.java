@@ -5,7 +5,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-import javax.management.InstanceNotFoundException;
+import jakarta.persistence.EntityNotFoundException;
 
 import com.viladevcorp.hosteo.utils.AuthUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -123,7 +123,7 @@ public class AuthService {
       throws UsernameAlreadyInUseException,
           EmailAlreadyInUseException,
           EmptyFormFieldsException,
-          InstanceNotFoundException,
+          EntityNotFoundException,
           SendEmailException,
           UserAlreadyValidatedException {
     if (userRepository.findByUsername(username) != null) {
@@ -215,7 +215,7 @@ public class AuthService {
   }
 
   public void createValidationCode(String username, ValidationCodeType type)
-      throws InstanceNotFoundException,
+      throws EntityNotFoundException,
           SendEmailException,
           EmptyFormFieldsException,
           UserAlreadyValidatedException {
@@ -224,7 +224,7 @@ public class AuthService {
     }
     User user = userRepository.findByUsername(username);
     if (user == null) {
-      throw new InstanceNotFoundException();
+      throw new EntityNotFoundException();
     }
     if (type.equals(ValidationCodeType.ACTIVATE_ACCOUNT)) {
       if (user.isValidated()) {
@@ -266,7 +266,7 @@ public class AuthService {
   }
 
   private void validateCode(String username, ValidationCodeType type, String code)
-      throws InstanceNotFoundException,
+      throws EntityNotFoundException,
           ExpiredValidationCodeException,
           AlreadyUsedValidationCodeException,
           IncorrectValidationCodeException {
@@ -275,7 +275,7 @@ public class AuthService {
         validationCodeRepository.findByUserUsernameAndTypeOrderByCreatedAtDesc(
             username, type.getType());
     if (validationCodeList.isEmpty()) {
-      throw new InstanceNotFoundException();
+      throw new EntityNotFoundException();
     }
     ValidationCode lastValidationCode = validationCodeList.get(0);
     if (lastValidationCode.getCode().equals(code) && lastValidationCode.isUsed()) {
@@ -293,7 +293,7 @@ public class AuthService {
   }
 
   public void activateAccount(String username, String code)
-      throws InstanceNotFoundException,
+      throws EntityNotFoundException,
           ExpiredValidationCodeException,
           AlreadyUsedValidationCodeException,
           IncorrectValidationCodeException,
@@ -308,7 +308,7 @@ public class AuthService {
   }
 
   public void resetPassword(String username, String code, String newPassword)
-      throws InstanceNotFoundException,
+      throws EntityNotFoundException,
           ExpiredValidationCodeException,
           AlreadyUsedValidationCodeException,
           IncorrectValidationCodeException,

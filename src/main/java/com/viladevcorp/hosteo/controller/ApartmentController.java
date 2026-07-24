@@ -14,7 +14,7 @@ import com.viladevcorp.hosteo.utils.ValidationUtils;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
-import javax.management.InstanceNotFoundException;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -69,7 +69,7 @@ public class ApartmentController {
       apartment = apartmentService.updateApartment(form);
       log.info("[ApartmentController.updateApartment] - Apartment updated");
       return ResponseEntity.ok().body(new ApiResponse<>(new ApartmentWithTasksDto(apartment)));
-    } catch (InstanceNotFoundException e) {
+    } catch (EntityNotFoundException e) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(new ApiResponse<>(null, e.getMessage()));
     }
@@ -83,7 +83,7 @@ public class ApartmentController {
       apartment = apartmentService.getApartmentById(id);
       log.info("[ApartmentController.getApartment] - Apartment fetched");
       return ResponseEntity.ok().body(new ApiResponse<>(new ApartmentWithTasksDto(apartment)));
-    } catch (InstanceNotFoundException e) {
+    } catch (EntityNotFoundException e) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(new ApiResponse<>(null, e.getMessage()));
     }
@@ -111,7 +111,7 @@ public class ApartmentController {
       apartmentService.deleteApartment(id);
       log.info("[ApartmentController.deleteApartment] - Apartment deleted");
       return ResponseEntity.ok().body(new ApiResponse<>(null, "Apartment deleted successfully."));
-    } catch (InstanceNotFoundException e) {
+    } catch (EntityNotFoundException e) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(new ApiResponse<>(null, e.getMessage()));
     }

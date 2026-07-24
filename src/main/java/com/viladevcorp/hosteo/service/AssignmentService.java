@@ -16,7 +16,7 @@ import com.viladevcorp.hosteo.utils.CodeErrors;
 import com.viladevcorp.hosteo.utils.ServiceUtils;
 import java.time.Instant;
 import java.util.*;
-import javax.management.InstanceNotFoundException;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.misc.Pair;
 import org.springframework.beans.BeanUtils;
@@ -63,7 +63,7 @@ public class AssignmentService {
       throws DuplicatedEventForTaskException,
           NotAvailableDatesException,
           CompleteTaskOnNotFinishedEventException,
-          InstanceNotFoundException,
+          EntityNotFoundException,
           AssignmentStartsBeforeEventEnds,
           AssignmentEndsAfterNextEventStarts {
 
@@ -104,7 +104,7 @@ public class AssignmentService {
         eventRepository.findEventByIdWithAssignments(eventId, AuthUtils.getUsername());
 
     if (eventOpt.isEmpty()) {
-      throw new InstanceNotFoundException("Event not found with id: " + eventId);
+      throw new EntityNotFoundException("Event not found with id: " + eventId);
     }
 
     Event event = eventOpt.get();
@@ -168,7 +168,7 @@ public class AssignmentService {
   public void checkWhetherEventAssignmentsCanBeAltered(Event event)
       throws AssignChangeLastFinishedEventWhenAnotherEventInProgress,
           ChangeInAssignmentsOfPastEventException,
-          InstanceNotFoundException {
+          EntityNotFoundException {
 
     UUID apartmentId = event.getApartment().getId();
     // If the event is not finished, we can modify the assignments
@@ -186,7 +186,7 @@ public class AssignmentService {
     }
 
     // If the event to modify is not the last finished one, we cannot modify the assignments
-    if (event.getId().equals(lastFinishedEventOpt.get().getId())) {
+    if (!event.getId().equals(lastFinishedEventOpt.get().getId())) {
       log.error(
           "[AssignmentService.checkIfEventAssignmentsCanBeModified] - Cannot modify assignments for past events as "
               + "there are subsequent events and would affect the workflow");
@@ -215,7 +215,7 @@ public class AssignmentService {
   }
 
   public Assignment createAssignment(AssignmentCreateForm form)
-      throws InstanceNotFoundException,
+      throws EntityNotFoundException,
           DuplicatedEventForTaskException,
           NotAvailableDatesException,
           CompleteTaskOnNotFinishedEventException,
@@ -225,13 +225,13 @@ public class AssignmentService {
           AssignmentStartsBeforeEventEnds {
     Optional<Task> taskOpt = taskRepository.findById(form.getTaskId(), AuthUtils.getUsername());
     if (taskOpt.isEmpty()) {
-      throw new InstanceNotFoundException("Task not found with id: " + form.getTaskId());
+      throw new EntityNotFoundException("Task not found with id: " + form.getTaskId());
     }
     Task task = taskOpt.get();
 
     Optional<Event> eventOpt = eventRepository.findById(form.getEventId(), AuthUtils.getUsername());
     if (eventOpt.isEmpty()) {
-      throw new InstanceNotFoundException("Event not found with id: " + form.getEventId());
+      throw new EntityNotFoundException("Event not found with id: " + form.getEventId());
     }
     Event event = eventOpt.get();
     checkWhetherEventAssignmentsCanBeAltered(event);
@@ -262,7 +262,7 @@ public class AssignmentService {
   }
 
   public Assignment updateAssignment(AssignmentUpdateForm form)
-      throws InstanceNotFoundException,
+      throws EntityNotFoundException,
           DuplicatedEventForTaskException,
           NotAvailableDatesException,
           CompleteTaskOnNotFinishedEventException,
@@ -293,7 +293,7 @@ public class AssignmentService {
   }
 
   private Assignment executeUpdateAssignmentState(Assignment assignment, AssignmentState newState)
-      throws InstanceNotFoundException,
+      throws EntityNotFoundException,
           DuplicatedEventForTaskException,
           NotAvailableDatesException,
           CompleteTaskOnNotFinishedEventException,
@@ -325,7 +325,7 @@ public class AssignmentService {
   }
 
   public Assignment updateAssignmentState(Assignment assignment, AssignmentState newState)
-      throws InstanceNotFoundException,
+      throws EntityNotFoundException,
           DuplicatedEventForTaskException,
           NotAvailableDatesException,
           CompleteTaskOnNotFinishedEventException,
@@ -340,7 +340,7 @@ public class AssignmentService {
   @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
   public Assignment updateAssignmentStateInNewTransaction(
       Assignment assignment, AssignmentState newState)
-      throws InstanceNotFoundException,
+      throws EntityNotFoundException,
           DuplicatedEventForTaskException,
           NotAvailableDatesException,
           CompleteTaskOnNotFinishedEventException,
@@ -368,7 +368,7 @@ public class AssignmentService {
       try {
         // Call the method that starts a new transaction for each assignment.
         updateAssignmentStateInNewTransaction(assignment, newState);
-      } catch (InstanceNotFoundException e) {
+      } catch (EntityNotFoundException e) {
         errors.add(new AssignmentUpdateError(assignment, e.getMessage()));
       } catch (DuplicatedEventForTaskException e) {
         errors.add(new AssignmentUpdateError(assignment, CodeErrors.DUPLICATED_EVENT_FOR_TASK));
@@ -400,10 +400,10 @@ public class AssignmentService {
     return errors;
   }
 
-  public Assignment getAssignmentById(UUID id) throws InstanceNotFoundException {
+  public Assignment getAssignmentById(UUID id) throws EntityNotFoundException {
     Optional<Assignment> result = assignmentRepository.findById(id, AuthUtils.getUsername());
     if (result.isEmpty()) {
-      throw new InstanceNotFoundException("Assignment not found with id: " + id);
+      throw new EntityNotFoundException("Assignment not found with id: " + id);
     } else {
       return result.get();
     }
@@ -432,7 +432,7 @@ public class AssignmentService {
   }
 
   public void deleteAssignment(UUID id)
-      throws InstanceNotFoundException,
+      throws EntityNotFoundException,
           ChangeInAssignmentsOfPastEventException,
           AssignChangeLastFinishedEventWhenAnotherEventInProgress {
     Assignment assignment = getAssignmentById(id);

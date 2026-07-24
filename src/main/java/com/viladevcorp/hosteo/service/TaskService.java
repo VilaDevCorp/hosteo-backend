@@ -14,7 +14,7 @@ import com.viladevcorp.hosteo.utils.ServiceUtils;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import javax.management.InstanceNotFoundException;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,12 +41,12 @@ public class TaskService {
     this.apartmentRepository = apartmentRepository;
   }
 
-  public Task createTask(TaskCreateForm form) throws InstanceNotFoundException {
+  public Task createTask(TaskCreateForm form) throws EntityNotFoundException {
 
     Optional<Apartment> apartmentOpt =
         apartmentRepository.findById(form.getApartmentId(), AuthUtils.getUsername());
     if (apartmentOpt.isEmpty()) {
-      throw new InstanceNotFoundException("Apartment not found with id: " + form.getApartmentId());
+      throw new EntityNotFoundException("Apartment not found with id: " + form.getApartmentId());
     }
     Apartment apartment = apartmentOpt.get();
     Task task =
@@ -64,7 +64,7 @@ public class TaskService {
     return task;
   }
 
-  public Task updateTask(TaskUpdateForm form) throws InstanceNotFoundException {
+  public Task updateTask(TaskUpdateForm form) throws EntityNotFoundException {
     Task task = getTaskById(form.getId());
     TaskType oldTaskType = task.getType();
     BeanUtils.copyProperties(form, task, "id");
@@ -75,10 +75,10 @@ public class TaskService {
     return task;
   }
 
-  public Task getTaskById(UUID id) throws InstanceNotFoundException {
+  public Task getTaskById(UUID id) throws EntityNotFoundException {
     Optional<Task> resultOpt = taskRepository.findById(id, AuthUtils.getUsername());
     if (resultOpt.isEmpty()) {
-      throw new InstanceNotFoundException("Task not found with id: " + id);
+      throw new EntityNotFoundException("Task not found with id: " + id);
     } else {
       return resultOpt.get();
     }
@@ -105,7 +105,7 @@ public class TaskService {
     return new PageMetadata(totalPages, totalRows);
   }
 
-  public void deleteTask(UUID id) throws InstanceNotFoundException {
+  public void deleteTask(UUID id) throws EntityNotFoundException {
     Task task = getTaskById(id);
     Apartment apartment = task.getApartment();
     apartment.removeTask(task);

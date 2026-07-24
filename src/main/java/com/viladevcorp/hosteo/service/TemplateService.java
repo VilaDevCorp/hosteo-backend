@@ -12,7 +12,7 @@ import com.viladevcorp.hosteo.utils.ServiceUtils;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import javax.management.InstanceNotFoundException;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,20 +45,20 @@ public class TemplateService {
     return new TemplateDto(templateRepository.save(template));
   }
 
-  public TemplateDto updateTemplate(TemplateUpdateForm form) throws InstanceNotFoundException {
+  public TemplateDto updateTemplate(TemplateUpdateForm form) throws EntityNotFoundException {
     Template template = getTemplateEntityById(form.getId());
     BeanUtils.copyProperties(form, template, "id");
     return new TemplateDto(templateRepository.save(template));
   }
 
-  public TemplateDto getTemplateById(UUID id) throws InstanceNotFoundException {
+  public TemplateDto getTemplateById(UUID id) throws EntityNotFoundException {
     return new TemplateDto(getTemplateEntityById(id));
   }
 
-  private Template getTemplateEntityById(UUID id) throws InstanceNotFoundException {
+  private Template getTemplateEntityById(UUID id) throws EntityNotFoundException {
     Optional<Template> template = templateRepository.findById(id, AuthUtils.getUsername());
     if (template.isEmpty()) {
-      throw new InstanceNotFoundException("Template not found with id: " + id);
+      throw new EntityNotFoundException("Template not found with id: " + id);
     }
     return template.get();
   }
@@ -86,7 +86,7 @@ public class TemplateService {
     return new PageMetadata(totalPages, totalRows);
   }
 
-  public void deleteTemplate(UUID id) throws InstanceNotFoundException {
+  public void deleteTemplate(UUID id) throws EntityNotFoundException {
     Template template = getTemplateEntityById(id);
     templateRepository.delete(template);
   }

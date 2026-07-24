@@ -11,7 +11,7 @@ import com.viladevcorp.hosteo.utils.ServiceUtils;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import javax.management.InstanceNotFoundException;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,16 +41,16 @@ public class WorkerService {
     return workerRepository.save(worker);
   }
 
-  public Worker updateWorker(WorkerUpdateForm form) throws InstanceNotFoundException {
+  public Worker updateWorker(WorkerUpdateForm form) throws EntityNotFoundException {
     Worker worker = getWorkerById(form.getId());
     BeanUtils.copyProperties(form, worker, "id");
     return workerRepository.save(worker);
   }
 
-  public Worker getWorkerById(UUID id) throws InstanceNotFoundException {
+  public Worker getWorkerById(UUID id) throws EntityNotFoundException {
     Optional<Worker> result = workerRepository.findById(id, AuthUtils.getUsername());
     if (result.isEmpty()) {
-      throw new InstanceNotFoundException("Worker not found with id: " + id);
+      throw new EntityNotFoundException("Worker not found with id: " + id);
     } else {
       return result.get();
     }
@@ -79,7 +79,7 @@ public class WorkerService {
     return new PageMetadata(totalPages, totalRows);
   }
 
-  public void deleteWorker(UUID id) throws InstanceNotFoundException {
+  public void deleteWorker(UUID id) throws EntityNotFoundException {
     Worker worker = getWorkerById(id);
     workerRepository.delete(worker);
   }

@@ -12,7 +12,7 @@ import com.viladevcorp.hosteo.utils.ServiceUtils;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import javax.management.InstanceNotFoundException;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,16 +46,16 @@ public class ApartmentService {
   }
 
   public Apartment updateApartment(ApartmentUpdateForm form)
-      throws InstanceNotFoundException {
+      throws EntityNotFoundException {
     Apartment apartment = getApartmentById(form.getId());
     BeanUtils.copyProperties(form, apartment, "id");
     return apartmentRepository.save(apartment);
   }
 
-  public Apartment getApartmentById(UUID id) throws InstanceNotFoundException {
+  public Apartment getApartmentById(UUID id) throws EntityNotFoundException {
     Optional<Apartment> result = apartmentRepository.findById(id, AuthUtils.getUsername());
     if (result.isEmpty()) {
-      throw new InstanceNotFoundException("Apartment not found with id: " + id);
+      throw new EntityNotFoundException("Apartment not found with id: " + id);
     } else {
       return result.get();
     }
@@ -86,7 +86,7 @@ public class ApartmentService {
   }
 
   public void deleteApartment(UUID id)
-      throws InstanceNotFoundException {
+      throws EntityNotFoundException {
     Apartment apartment = getApartmentById(id);
     apartmentRepository.delete(apartment);
   }

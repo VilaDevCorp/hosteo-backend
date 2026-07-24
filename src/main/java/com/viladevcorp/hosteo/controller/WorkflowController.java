@@ -7,7 +7,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import javax.management.InstanceNotFoundException;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -44,7 +44,7 @@ public class WorkflowController {
   //      SchedulerInfo info = workflowService.getSchedulerInfo(startDate, endDate);
   //      log.info("[WorkflowController.getSchedulerInfo] - Scheduler info retrieved successfully");
   //      return ResponseEntity.ok().body(new ApiResponse<>(info));
-  //    } catch (InstanceNotFoundException e) {
+  //    } catch (EntityNotFoundException e) {
   //      return ResponseEntity.status(HttpStatus.NOT_FOUND)
   //          .body(new ApiResponse<>(null, e.getMessage()));
   //    }

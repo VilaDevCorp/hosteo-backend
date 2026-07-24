@@ -12,7 +12,7 @@ import com.viladevcorp.hosteo.utils.ValidationUtils;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
-import javax.management.InstanceNotFoundException;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -70,7 +70,7 @@ public class TemplateController {
       TemplateDto template = templateService.updateTemplate(form);
       log.info("[TemplateController.updateTemplate] - Template updated successfully");
       return ResponseEntity.ok().body(new ApiResponse<>(template));
-    } catch (InstanceNotFoundException e) {
+    } catch (EntityNotFoundException e) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(new ApiResponse<>(null, e.getMessage()));
     }
@@ -84,7 +84,7 @@ public class TemplateController {
       TemplateDto template = templateService.getTemplateById(id);
       log.info("[TemplateController.getTemplate] - Template found successfully");
       return ResponseEntity.ok().body(new ApiResponse<>(template));
-    } catch (InstanceNotFoundException e) {
+    } catch (EntityNotFoundException e) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(new ApiResponse<>(null, e.getMessage()));
     }
@@ -111,7 +111,7 @@ public class TemplateController {
       templateService.deleteTemplate(id);
       log.info("[TemplateController.deleteTemplate] - Template deleted successfully");
       return ResponseEntity.ok().body(new ApiResponse<>(null, "Template deleted successfully."));
-    } catch (InstanceNotFoundException e) {
+    } catch (EntityNotFoundException e) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(new ApiResponse<>(null, e.getMessage()));
     }

@@ -1,6 +1,6 @@
 package com.viladevcorp.hosteo.controller;
 
-import javax.management.InstanceNotFoundException;
+import jakarta.persistence.EntityNotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -60,7 +60,7 @@ public class AuthController {
 
   @PostMapping("/public/register")
   public ResponseEntity<ApiResponse<UserDto>> registerUser(@RequestBody RegisterForm registerForm)
-      throws InstanceNotFoundException,
+      throws EntityNotFoundException,
           SendEmailException,
           EmptyFormFieldsException,
           UserAlreadyValidatedException {
@@ -113,7 +113,7 @@ public class AuthController {
   @PostMapping("/public/validate/{username}/{validationCode}")
   public ResponseEntity<ApiResponse<Void>> validateAccount(
       @PathVariable String username, @PathVariable String validationCode)
-      throws InstanceNotFoundException, EmptyFormFieldsException {
+      throws EntityNotFoundException, EmptyFormFieldsException {
     if (username == null || validationCode == null) {
       throw new EmptyFormFieldsException();
     }
@@ -134,7 +134,7 @@ public class AuthController {
 
   @PostMapping("/public/validate/{username}/resend")
   public ResponseEntity<ApiResponse<Void>> resendValidationCode(@PathVariable String username)
-      throws EmptyFormFieldsException, InstanceNotFoundException, SendEmailException {
+      throws EmptyFormFieldsException, EntityNotFoundException, SendEmailException {
     if (username == null) {
       throw new EmptyFormFieldsException();
     }
@@ -151,7 +151,7 @@ public class AuthController {
 
   @PostMapping("/public/forgotten-password/{username}")
   public ResponseEntity<ApiResponse<Void>> sendResetPasswordCode(@PathVariable String username)
-      throws InstanceNotFoundException,
+      throws EntityNotFoundException,
           SendEmailException,
           EmptyFormFieldsException,
           UserAlreadyValidatedException {
@@ -167,7 +167,7 @@ public class AuthController {
       @PathVariable String username,
       @PathVariable String validationCode,
       @RequestBody String newPassword)
-      throws InstanceNotFoundException, EmptyFormFieldsException {
+      throws EntityNotFoundException, EmptyFormFieldsException {
     if (username == null || validationCode == null) {
       throw new EmptyFormFieldsException();
     }

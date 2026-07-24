@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
-import javax.management.InstanceNotFoundException;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -46,8 +46,8 @@ public class AssignmentController {
       Assignment assignment = operation.call();
       log.info("[AssignmentController] - Operation successful, returning assignment.");
       return ResponseEntity.ok().body(new ApiResponse<>(new AssignmentDto(assignment)));
-    } catch (InstanceNotFoundException e) {
-      log.error("[AssignmentController] - InstanceNotFoundException: {}", e.getMessage());
+    } catch (EntityNotFoundException e) {
+      log.error("[AssignmentController] - EntityNotFoundException: {}", e.getMessage());
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(new ApiResponse<>(null, e.getMessage()));
     } catch (DuplicatedEventForTaskException e) {
@@ -184,8 +184,8 @@ public class AssignmentController {
       operation.call();
       log.info("[AssignmentController] - Deletion successful.");
       return ResponseEntity.ok().body(new ApiResponse<>(null, "Assignment deleted successfully."));
-    } catch (InstanceNotFoundException e) {
-      log.error("[AssignmentController] - InstanceNotFoundException: {}", e.getMessage());
+    } catch (EntityNotFoundException e) {
+      log.error("[AssignmentController] - EntityNotFoundException: {}", e.getMessage());
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(new ApiResponse<>(null, e.getMessage()));
     } catch (ChangeInAssignmentsOfPastEventException e) {

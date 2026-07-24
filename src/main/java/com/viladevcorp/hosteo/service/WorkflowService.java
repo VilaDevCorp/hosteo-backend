@@ -15,7 +15,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
-import javax.management.InstanceNotFoundException;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -46,11 +46,11 @@ public class WorkflowService {
     this.clock = clock;
   }
 
-  public void calculateApartmentState(UUID id) throws InstanceNotFoundException {
+  public void calculateApartmentState(UUID id) throws EntityNotFoundException {
 
     Optional<Apartment> apartmentOpt = apartmentRepository.findById(id, AuthUtils.getUsername());
     if (apartmentOpt.isEmpty()) {
-      throw new InstanceNotFoundException("Apartment not found with id: " + id);
+      throw new EntityNotFoundException("Apartment not found with id: " + id);
     }
     Apartment apartment = apartmentOpt.get();
 
@@ -154,7 +154,7 @@ public class WorkflowService {
   //  private EventSchedulerDto processEventForScheduler(
   //      Event event, Map<UUID, ApartmentInfo> apartmentInfoMap, Map<UUID, EventSchedulerDto>
   // eventMap)
-  //      throws InstanceNotFoundException {
+  //      throws EntityNotFoundException {
   //    if (event == null) {
   //      return null;
   //    }
@@ -215,7 +215,7 @@ public class WorkflowService {
   //  }
   //
   //  public SchedulerInfo getSchedulerInfo(Instant startDate, Instant endDate)
-  //      throws InstanceNotFoundException {
+  //      throws EntityNotFoundException {
   //    SchedulerInfo schedulerInfo = new SchedulerInfo();
   //    List<Event> eventsOnRange =
   //        eventRepository.findEventsByDateRange(AuthUtils.getUsername(), startDate, endDate);

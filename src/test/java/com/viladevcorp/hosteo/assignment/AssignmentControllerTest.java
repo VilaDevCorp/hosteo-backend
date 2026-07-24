@@ -32,7 +32,7 @@ import com.viladevcorp.hosteo.model.types.AssignmentState;
 import com.viladevcorp.hosteo.utils.ApiResponse;
 import com.viladevcorp.hosteo.utils.CodeErrors;
 
-import javax.management.InstanceNotFoundException;
+import jakarta.persistence.EntityNotFoundException;
 
 import static com.viladevcorp.hosteo.common.TestConstants.*;
 
@@ -963,7 +963,7 @@ class AssignmentControllerTest extends BaseControllerTest {
                   assignmentToComplete.getTask().getApartment().getId(),
                   assignmentToComplete.getStartDate(),
                   null)
-              .orElseThrow(InstanceNotFoundException::new);
+              .orElseThrow(EntityNotFoundException::new);
       event.setState(EventState.FINISHED);
 
       eventRepository.save(event);
@@ -983,7 +983,7 @@ class AssignmentControllerTest extends BaseControllerTest {
       relatedApartment =
           apartmentRepository
               .findById(relatedApartment.getId())
-              .orElseThrow(InstanceNotFoundException::new);
+              .orElseThrow(EntityNotFoundException::new);
 
       assignmentToComplete = testSetupHelper.getTestAssignments().get(3);
 
@@ -1001,7 +1001,7 @@ class AssignmentControllerTest extends BaseControllerTest {
       relatedApartment =
           apartmentRepository
               .findById(relatedApartment.getId())
-              .orElseThrow(InstanceNotFoundException::new);
+              .orElseThrow(EntityNotFoundException::new);
 
       assignmentToComplete = testSetupHelper.getTestAssignments().get(4);
 
@@ -1019,7 +1019,7 @@ class AssignmentControllerTest extends BaseControllerTest {
       relatedApartment =
           apartmentRepository
               .findById(relatedApartment.getId())
-              .orElseThrow(InstanceNotFoundException::new);
+              .orElseThrow(EntityNotFoundException::new);
     }
 
     @Test
@@ -1049,7 +1049,7 @@ class AssignmentControllerTest extends BaseControllerTest {
       relatedApartment =
           apartmentRepository
               .findById(relatedApartment.getId())
-              .orElseThrow(InstanceNotFoundException::new);
+              .orElseThrow(EntityNotFoundException::new);
 
       mockMvc
           .perform(delete("/api/task/" + result.getData().getId()).contentType("application/json"))
@@ -1057,7 +1057,7 @@ class AssignmentControllerTest extends BaseControllerTest {
       relatedApartment =
           apartmentRepository
               .findById(relatedApartment.getId())
-              .orElseThrow(InstanceNotFoundException::new);
+              .orElseThrow(EntityNotFoundException::new);
     }
 
     @Test
@@ -1076,7 +1076,7 @@ class AssignmentControllerTest extends BaseControllerTest {
       Apartment apartment =
           apartmentRepository
               .findById(assignmentToUpdate.getTask().getApartment().getId())
-              .orElseThrow(InstanceNotFoundException::new);
+              .orElseThrow(EntityNotFoundException::new);
       mockMvc
           .perform(
               patch(
@@ -1089,7 +1089,7 @@ class AssignmentControllerTest extends BaseControllerTest {
       apartment =
           apartmentRepository
               .findById(assignmentToUpdate.getTask().getApartment().getId())
-              .orElseThrow(InstanceNotFoundException::new);
+              .orElseThrow(EntityNotFoundException::new);
     }
 
     @Test
@@ -1102,7 +1102,7 @@ class AssignmentControllerTest extends BaseControllerTest {
       Apartment apartment =
           apartmentRepository
               .findById(assignment.getTask().getApartment().getId())
-              .orElseThrow(InstanceNotFoundException::new);
+              .orElseThrow(EntityNotFoundException::new);
       AssignmentCreateForm form = new AssignmentCreateForm();
       form.setTaskId(
           testSetupHelper.getTestTasks().get(CREATED_ASSIGNMENT_TASK_POSITION_1).getId());
@@ -1127,7 +1127,7 @@ class AssignmentControllerTest extends BaseControllerTest {
       apartment =
           apartmentRepository
               .findById(assignment.getTask().getApartment().getId())
-              .orElseThrow(InstanceNotFoundException::new);
+              .orElseThrow(EntityNotFoundException::new);
     }
   }
 }

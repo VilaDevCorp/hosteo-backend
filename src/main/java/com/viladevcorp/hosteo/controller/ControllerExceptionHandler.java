@@ -1,6 +1,6 @@
 package com.viladevcorp.hosteo.controller;
 
-import javax.management.InstanceNotFoundException;
+import jakarta.persistence.EntityNotFoundException;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +13,7 @@ import com.viladevcorp.hosteo.utils.ApiResponse;
 
 @ControllerAdvice
 public class ControllerExceptionHandler {
-  @ExceptionHandler(value = InstanceNotFoundException.class)
+  @ExceptionHandler(value = EntityNotFoundException.class)
   public ResponseEntity<ApiResponse<?>> instanceNotFound(Exception e) {
     String errorMessage = e.getMessage() == null ? "Resource not found" : e.getMessage();
     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse<>(null, errorMessage));

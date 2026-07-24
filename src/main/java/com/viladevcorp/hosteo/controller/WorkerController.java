@@ -13,7 +13,7 @@ import com.viladevcorp.hosteo.utils.ValidationUtils;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
-import javax.management.InstanceNotFoundException;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -68,7 +68,7 @@ public class WorkerController {
       worker = workerService.updateWorker(form);
       log.info("[WorkerController.updateWorker] - Worker updated");
       return ResponseEntity.ok().body(new ApiResponse<>(new WorkerDto(worker)));
-    } catch (InstanceNotFoundException e) {
+    } catch (EntityNotFoundException e) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(new ApiResponse<>(null, e.getMessage()));
     }
@@ -82,7 +82,7 @@ public class WorkerController {
       worker = workerService.getWorkerById(id);
       log.info("[WorkerController.getWorker] - Worker fetched");
       return ResponseEntity.ok().body(new ApiResponse<>(new WorkerDto(worker)));
-    } catch (InstanceNotFoundException e) {
+    } catch (EntityNotFoundException e) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(new ApiResponse<>(null, e.getMessage()));
     }
@@ -110,7 +110,7 @@ public class WorkerController {
       workerService.deleteWorker(id);
       log.info("[WorkerController.deleteWorker] - Worker deleted");
       return ResponseEntity.ok().body(new ApiResponse<>(null, "Worker deleted successfully."));
-    } catch (InstanceNotFoundException e) {
+    } catch (EntityNotFoundException e) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(new ApiResponse<>(null, e.getMessage()));
     }

@@ -13,7 +13,7 @@ import com.viladevcorp.hosteo.utils.ValidationUtils;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
-import javax.management.InstanceNotFoundException;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -54,7 +54,7 @@ public class TaskController {
       Task task = taskService.createTask(form);
       log.info("[TaskController.createTask] - Task created successfully");
       return ResponseEntity.ok().body(new ApiResponse<>(new TaskDto(task)));
-    } catch (InstanceNotFoundException e) {
+    } catch (EntityNotFoundException e) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(new ApiResponse<>(null, e.getMessage()));
     }
@@ -75,7 +75,7 @@ public class TaskController {
       Task task = taskService.updateTask(form);
       log.info("[TaskController.updateTask] - Task updated successfully");
       return ResponseEntity.ok().body(new ApiResponse<>(new TaskDto(task)));
-    } catch (InstanceNotFoundException e) {
+    } catch (EntityNotFoundException e) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(new ApiResponse<>(null, e.getMessage()));
     }
@@ -89,7 +89,7 @@ public class TaskController {
       Task task = taskService.getTaskById(id);
       log.info("[TaskController.getTask] - Task found successfully");
       return ResponseEntity.ok().body(new ApiResponse<>(new TaskDto(task)));
-    } catch (InstanceNotFoundException e) {
+    } catch (EntityNotFoundException e) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(new ApiResponse<>(null, e.getMessage()));
     }
@@ -118,7 +118,7 @@ public class TaskController {
       taskService.deleteTask(id);
       log.info("[TaskController.deleteTask] - Task deleted successfully");
       return ResponseEntity.ok().body(new ApiResponse<>(null, "Task deleted successfully."));
-    } catch (InstanceNotFoundException e) {
+    } catch (EntityNotFoundException e) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(new ApiResponse<>(null, e.getMessage()));
     }
