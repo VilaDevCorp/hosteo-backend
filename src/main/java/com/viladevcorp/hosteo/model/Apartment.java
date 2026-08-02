@@ -55,12 +55,11 @@ public class Apartment extends BaseEntity {
   @Builder.Default private boolean visible = true;
 
   @OneToMany(mappedBy = "apartment")
-  @OnDelete(action = OnDeleteAction.CASCADE)
   @JsonIgnore
   @Builder.Default
   private Set<Event> events = new HashSet<>();
 
-  @OneToMany(mappedBy = "apartment", cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(mappedBy = "apartment")
   @Builder.Default
   private List<Task> tasks = new ArrayList<>();
 

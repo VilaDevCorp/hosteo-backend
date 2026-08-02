@@ -34,7 +34,6 @@ public class ValidationCode extends BaseEntity {
   }
 
   @ManyToOne(optional = false)
-  @OnDelete(action = OnDeleteAction.CASCADE)
   @JoinColumn(name = "user_id")
   private User user;
 

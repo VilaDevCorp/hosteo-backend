@@ -23,7 +23,6 @@ public class ImpBooking extends BaseEntity {
 
   @NotNull
   @ManyToOne(optional = false)
-  @OnDelete(action = OnDeleteAction.CASCADE)
   private Apartment apartment;
 
   @NotNull
