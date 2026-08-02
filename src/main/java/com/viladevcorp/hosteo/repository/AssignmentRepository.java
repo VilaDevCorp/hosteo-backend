@@ -66,7 +66,9 @@ public interface AssignmentRepository extends EntityRepository<Assignment> {
       String username, UUID workerId, Instant startDate, Instant endDate, UUID excludeAssignmentId);
 
   @Query(
-      "SELECT a FROM Assignment a WHERE a.createdBy.username = :username "
+      "SELECT a FROM Assignment a "
+          + "LEFT JOIN FETCH a.event "
+          + "WHERE a.createdBy.username = :username "
           + "AND (:apartmentId IS NULL OR a.task.apartment.id = :apartmentId) "
           + "AND (:state IS NULL OR a.state = :state) AND (CAST(:startDate AS TIMESTAMP) IS NULL OR a.startDate >= :startDate) "
           + "AND (CAST(:endDate AS TIMESTAMP) IS NULL OR a.startDate < :endDate)")

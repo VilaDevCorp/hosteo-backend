@@ -29,24 +29,24 @@ public class WorkflowController {
     this.workflowService = workflowService;
   }
 
-  //  @GetMapping("/scheduler/{startDateStr}")
-  //  public ResponseEntity<ApiResponse<SchedulerInfo>> getSchedulerInfo(
-  //      @PathVariable String startDateStr) {
-  //    log.info(
-  //        "[WorkflowController.getSchedulerInfo] - Getting scheduler info for date: {}",
-  //        startDateStr);
-  //    // We use a date formatter
-  //    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-  //    Instant startDate =
-  //        LocalDate.parse(startDateStr, formatter).atStartOfDay().toInstant(ZoneOffset.UTC);
-  //    Instant endDate = startDate.plusSeconds(7 * 24 * 60 * 60); // One week later
-  //    try {
-  //      SchedulerInfo info = workflowService.getSchedulerInfo(startDate, endDate);
-  //      log.info("[WorkflowController.getSchedulerInfo] - Scheduler info retrieved successfully");
-  //      return ResponseEntity.ok().body(new ApiResponse<>(info));
-  //    } catch (EntityNotFoundException e) {
-  //      return ResponseEntity.status(HttpStatus.NOT_FOUND)
-  //          .body(new ApiResponse<>(null, e.getMessage()));
-  //    }
-  //  }
+  @GetMapping("/scheduler/{startDateStr}")
+  public ResponseEntity<ApiResponse<SchedulerInfo>> getSchedulerInfo(
+      @PathVariable String startDateStr) {
+    log.info(
+        "[WorkflowController.getSchedulerInfo] - Getting scheduler info for date: {}",
+        startDateStr);
+    // We use a date formatter
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+    Instant startDate =
+        LocalDate.parse(startDateStr, formatter).atStartOfDay().toInstant(ZoneOffset.UTC);
+    Instant endDate = startDate.plusSeconds(7 * 24 * 60 * 60); // One week later
+    try {
+      SchedulerInfo info = workflowService.getSchedulerInfo(startDate, endDate);
+      log.info("[WorkflowController.getSchedulerInfo] - Scheduler info retrieved successfully");
+      return ResponseEntity.ok().body(new ApiResponse<>(info));
+    } catch (EntityNotFoundException e) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND)
+          .body(new ApiResponse<>(null, e.getMessage()));
+    }
+  }
 }

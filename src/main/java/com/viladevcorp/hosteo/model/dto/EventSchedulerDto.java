@@ -4,7 +4,7 @@ import com.viladevcorp.hosteo.model.Event;
 import com.viladevcorp.hosteo.model.types.Alert;
 import com.viladevcorp.hosteo.model.types.EventSource;
 import java.time.Instant;
-import java.util.UUID;
+import java.util.*;
 
 import com.viladevcorp.hosteo.model.types.EventType;
 import lombok.Getter;
@@ -17,12 +17,11 @@ import org.springframework.beans.BeanUtils;
 @NoArgsConstructor
 public class EventSchedulerDto extends BaseEntityDto {
 
-  public EventSchedulerDto(Event event, Alert alert) {
+  public EventSchedulerDto(Event event) {
     if (event == null) {
       return;
     }
     BeanUtils.copyProperties(event, this);
-    this.alert = alert;
   }
 
   private UUID id;
@@ -37,5 +36,14 @@ public class EventSchedulerDto extends BaseEntityDto {
 
   private EventSource source;
 
+  private int nMandatoryAssignedTasks;
+  private int nExtraAssignedTasks;
+  private List<TaskDto> mandatoryUnassignedTasks = new ArrayList<>();
+
+  private int nCompletedAssignments;
+  private List<AssignmentDto> uncompletedAssignments;
+
   private Alert alert;
+
+  private boolean overdue;
 }

@@ -100,6 +100,7 @@ public interface EventRepository extends EntityRepository<Event> {
       @Param("dateParam") Instant dateParam,
       @Param("state") String state);
 
+  @EntityGraph(attributePaths = {"assignments"})
   @Query(
       value =
           "SELECT b FROM Event b "

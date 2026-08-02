@@ -2,16 +2,14 @@ package com.viladevcorp.hosteo.service;
 
 import com.viladevcorp.hosteo.model.*;
 import com.viladevcorp.hosteo.model.dto.*;
-import com.viladevcorp.hosteo.model.types.Alert;
-import com.viladevcorp.hosteo.model.types.ApartmentState;
-import com.viladevcorp.hosteo.model.types.EventState;
-import com.viladevcorp.hosteo.model.types.TaskType;
+import com.viladevcorp.hosteo.model.types.*;
 import com.viladevcorp.hosteo.repository.ApartmentRepository;
 import com.viladevcorp.hosteo.repository.AssignmentRepository;
 import com.viladevcorp.hosteo.repository.EventRepository;
 import com.viladevcorp.hosteo.repository.TaskRepository;
 import com.viladevcorp.hosteo.utils.AuthUtils;
 import java.time.Clock;
+import org.springframework.data.domain.Pageable;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -118,257 +116,242 @@ public class WorkflowService {
   }
 
   private static class ApartmentInfo {
-    List<TaskDto> tasks;
+    List<TaskDto> mandatoryTasks;
     Event nextPendingEvent;
     ApartmentState state;
 
-    public ApartmentInfo(List<TaskDto> tasks, Event nextPendingEvent, ApartmentState state) {
-      this.tasks = tasks;
+    public ApartmentInfo(List<TaskDto> mandatoryTasks, Event nextPendingEvent, ApartmentState state) {
+      this.mandatoryTasks = mandatoryTasks;
       this.nextPendingEvent = nextPendingEvent;
       this.state = state;
     }
   }
 
-  //  private ApartmentInfo processApartment(
-  //      Apartment apartment, Map<UUID, ApartmentInfo> apartmentInfoMap) {
-  //    UUID apartmentId = apartment.getId();
-  //    if (!apartmentInfoMap.containsKey(apartmentId)) {
-  //      List<TaskDto> apartmentTasks =
-  //          taskRepository
-  //              .findNonExtraTasksByApartmentId(AuthUtils.getUsername(), apartmentId)
-  //              .stream()
-  //              .map(TaskDto::new)
-  //              .collect(Collectors.toList());
-  //      Event nextPendingEvent =
-  //          eventRepository
-  //              .findFirstByCreatedByUsernameAndApartmentIdAndStateOrderByEndDateAsc(
-  //                  AuthUtils.getUsername(), apartmentId, EventState.PENDING)
-  //              .orElse(null);
-  //      ApartmentInfo aptInfo =
-  //          new ApartmentInfo(apartmentTasks, nextPendingEvent, apartment.getState());
-  //      apartmentInfoMap.put(apartmentId, aptInfo);
-  //      return aptInfo;
-  //    } else {
-  //      return apartmentInfoMap.get(apartmentId);
-  //    }
-  //  }
-  //
-  //  private EventSchedulerDto processEventForScheduler(
-  //      Event event, Map<UUID, ApartmentInfo> apartmentInfoMap, Map<UUID, EventSchedulerDto>
-  // eventMap)
-  //      throws EntityNotFoundException {
-  //    if (event == null) {
-  //      return null;
-  //    }
-  //    if (eventMap.containsKey(event.getId())) {
-  //      return eventMap.get(event.getId());
-  //    }
-  //    Set<Assignment> eventAssignments = getAssigmentsRelatedToEvent(event.getId());
-  //    EventSchedulerDto eventDto = new EventSchedulerDto();
-  //    eventDto.setEvent(new EventDto(event));
-  //    ApartmentInfo apartmentInfo = processApartment(event.getApartment(), apartmentInfoMap);
-  //    List<TaskDto> apartmentTasks = apartmentInfo.tasks;
-  //    Set<UUID> assignedTaskIds =
-  //        eventAssignments.stream()
-  //            .map(assignment -> assignment.getTask().getId())
-  //            .collect(Collectors.toSet());
-  //    List<TaskDto> tasksToRemove = new ArrayList<>();
-  //    for (TaskDto taskDto : apartmentTasks) {
-  //      if (assignedTaskIds.contains(taskDto.getId())) {
-  //        eventDto.getAssignedTasks().add(taskDto);
-  //        tasksToRemove.add(taskDto);
-  //      }
-  //    }
-  //    apartmentTasks.removeAll(tasksToRemove);
-  //    eventDto.getUnassignedTasks().addAll(apartmentTasks);
-  //    eventDto.setHasUnfinishedTasks(
-  //        eventAssignments.stream()
-  //            .anyMatch(
-  //                assignment ->
-  //                    assignment.getState()
-  //                        == com.viladevcorp.hosteo.model.types.AssignmentState.PENDING));
-  //
-  //    if (!eventMap.containsKey(event.getId())) {
-  //      eventMap.put(event.getId(), eventDto);
-  //    }
-  //    Event previousEvent =
-  //        eventRepository
-  //            .findFirstEventBeforeDateWithState(
-  //                AuthUtils.getAuthUser().getId(),
-  //                event.getApartment().getId(),
-  //                event.getStartDate(),
-  //                null)
-  //            .orElse(null);
-  //    eventDto.setPrevEvent(new SimpleEventSchedulerDto(previousEvent));
-  //
-  //    return eventDto;
-  //  }
-  //
-  //  private void passAlertsToRangeEvent(
-  //      List<EventSchedulerDto> rangeEvents, EventSchedulerDto eventWithAlert) {
-  //    EventSchedulerDto rangeEventSched =
-  //        rangeEvents.stream()
-  //            .filter(event -> event.getEvent().getId().equals(eventWithAlert.getEvent().getId()))
-  //            .findFirst()
-  //            .orElse(null);
-  //    if (rangeEventSched != null) {
-  //      rangeEventSched.setAlert(eventWithAlert.getAlert());
-  //    }
-  //  }
-  //
-  //  public SchedulerInfo getSchedulerInfo(Instant startDate, Instant endDate)
-  //      throws EntityNotFoundException {
-  //    SchedulerInfo schedulerInfo = new SchedulerInfo();
-  //    List<Event> eventsOnRange =
-  //        eventRepository.findEventsByDateRange(AuthUtils.getUsername(), startDate, endDate);
-  //    List<EventSchedulerDto> rangeEvents = new ArrayList<>();
-  //    List<EventSchedulerDto> redAlertEvents = new ArrayList<>();
-  //    List<EventSchedulerDto> yellowAlertEvents = new ArrayList<>();
-  //    Map<UUID, ApartmentInfo> apartmentInfoMap = new HashMap<>();
-  //    Map<UUID, EventSchedulerDto> eventMap = new HashMap<>();
-  //    // With this we got all events inside the range of the scheduler
-  //    for (Event event : eventsOnRange) {
-  //      rangeEvents.add(processEventForScheduler(event, apartmentInfoMap, eventMap));
-  //    }
-  //
-  //    // Now we get the pending events until 5 days from now to check for alerts
-  //    List<Event> alertEvents =
-  //        eventRepository.advancedSearch(
-  //            AuthUtils.getUsername(),
-  //            null,
-  //            List.of(EventState.PENDING),
-  //            null,
-  //            Instant.now(clock).plusSeconds(5 * 24 * 3600),
-  //            null);
-  //
-  //    // Group by apartment in the alertEventsMap, processing them for the scheduler
-  //    Map<UUID, List<EventSchedulerDto>> alertEventsMap = new HashMap<>();
-  //
-  //    for (Event event : alertEvents) {
-  //      if (!alertEventsMap.containsKey(event.getApartment().getId())) {
-  //        alertEventsMap.put(event.getApartment().getId(), new ArrayList<>());
-  //      }
-  //      alertEventsMap
-  //          .get(event.getApartment().getId())
-  //          .add(processEventForScheduler(event, apartmentInfoMap, eventMap));
-  //    }
-  //
-  //    for (UUID apartmentId : alertEventsMap.keySet()) {
-  //      List<EventSchedulerDto> aptEvents = alertEventsMap.get(apartmentId);
-  //      aptEvents.sort(Comparator.comparing(b -> b.getEvent().getStartDate()));
-  //      for (int i = 0; i < aptEvents.size(); i++) {
-  //        EventSchedulerDto previousEventSched;
-  //        EventSchedulerDto currentEventSched = aptEvents.get(i);
-  //        // If its the next pending event and the apartment is ready, we dont care about cleaning
-  //        // tasks (override)
-  //        if (currentEventSched
-  //                .getEvent()
-  //                .getId()
-  //                .equals(apartmentInfoMap.get(apartmentId).nextPendingEvent.getId())
-  //            && apartmentInfoMap.get(apartmentId).state == ApartmentState.READY) {
-  //          aptEvents.get(i).setApartmentReady(true);
-  //          continue;
-  //        }
-  //        // If the event is the first in the alertEvents of the apartment, we check for a
-  //        // previous event in DB
-  //        if (i == 0) {
-  //          previousEventSched =
-  //              processEventForScheduler(
-  //                  eventRepository
-  //                      .findFirstEventBeforeDateWithState(
-  //                          AuthUtils.getAuthUser().getId(),
-  //                          apartmentId,
-  //                          currentEventSched.getEvent().getStartDate(),
-  //                          null)
-  //                      .orElse(null),
-  //                  apartmentInfoMap,
-  //                  eventMap);
-  //          // If its not the first one, we can get the previous event from the alert list (we
-  //          // already retrieved it)
-  //        } else {
-  //          previousEventSched = aptEvents.get(i - 1);
-  //        }
-  //
-  //        final Instant RED_FLAG_LIMIT = Instant.now(clock).plusSeconds(2 * 24 * 3600);
-  //        if (currentEventSched.getEvent().getStartDate().isBefore(RED_FLAG_LIMIT)) {
-  //          // if the event is the first one of the apartment, but the apartment is dirty, we
-  // assume
-  //          // that the
-  //          if (previousEventSched == null) {}
-  //
-  //          if (!previousEventSched.getUnassignedTasks().isEmpty()) {
-  //            currentEventSched.setAlert(Alert.DAYS_LEFT_2_UNASSIGNED);
-  //            passAlertsToRangeEvent(rangeEvents, currentEventSched);
-  //            redAlertEvents.add(currentEventSched);
-  //            continue;
-  //          }
-  //          if (previousEventSched.isHasUnfinishedTasks()) {
-  //            currentEventSched.setAlert(Alert.DAYS_LEFT_2_NOT_COMPLETED);
-  //            passAlertsToRangeEvent(rangeEvents, currentEventSched);
-  //            redAlertEvents.add(currentEventSched);
-  //            continue;
-  //          }
-  //        }
-  //        Instant YELLOW_FLAG_LIMIT = Instant.now(clock).plusSeconds(5 * 24 * 3600);
-  //        if (currentEventSched.getEvent().getStartDate().isBefore(YELLOW_FLAG_LIMIT)) {
-  //          if (!previousEventSched.getUnassignedTasks().isEmpty()) {
-  //            currentEventSched.setAlert(Alert.DAYS_LEFT_5_UNASSIGNED);
-  //            passAlertsToRangeEvent(rangeEvents, currentEventSched);
-  //            yellowAlertEvents.add(currentEventSched);
-  //          }
-  //        }
-  //      }
-  //    }
-  //
-  //    schedulerInfo.setEvents(rangeEvents);
-  //    schedulerInfo.setRedAlertEvents(redAlertEvents);
-  //    schedulerInfo.setYellowAlertEvents(yellowAlertEvents);
-  //
-  //    // We get the assignments and for each one, we calculate the limit dates (previous event end
-  //    // and next event start)
-  //    schedulerInfo.setAssignments(
-  //        assignmentRepository
-  //            .findByApartmentAndStateAndDateRangeAndExtra(
-  //                AuthUtils.getUsername(), null, null, startDate, endDate, null)
-  //            .stream()
-  //            .map(
-  //                assignment -> {
-  //                  SimpleEventSchedulerDto previousEvent =
-  //                      new SimpleEventSchedulerDto(
-  //                          eventRepository
-  //                              .findFirstEventBeforeDateWithState(
-  //                                  AuthUtils.getAuthUser().getId(),
-  //                                  assignment.getTask().getApartment().getId(),
-  //                                  assignment.getStartDate(),
-  //                                  null)
-  //                              .orElse(null));
-  //
-  //                  Event nextEvent =
-  //                      eventRepository
-  //                          .findFirstEventAfterDateWithState(
-  //                              AuthUtils.getAuthUser().getId(),
-  //                              assignment.getTask().getApartment().getId(),
-  //                              assignment.getStartDate(),
-  //                              null)
-  //                          .orElse(null);
-  //                  SimpleEventSchedulerDto nextEventDto = null;
-  //
-  //                  if (nextEvent != null) {
-  //                    if (eventMap.get(nextEvent.getId()) != null) {
-  //                      nextEventDto = new
-  // SimpleEventSchedulerDto(eventMap.get(nextEvent.getId()));
-  //                    } else {
-  //                      nextEventDto = new SimpleEventSchedulerDto(nextEvent);
-  //                    }
-  //                  }
-  //
-  //                  return new AssignmentForSchedulerDto(assignment, previousEvent, nextEventDto);
-  //                })
-  //            .collect(Collectors.toSet()));
-  //    schedulerInfo.setExtraTasks(
-  //        taskRepository.findExtraTasksNotAssigned(AuthUtils.getUsername()).stream()
-  //            .map(TaskDto::new)
-  //            .collect(Collectors.toList()));
-  //    return schedulerInfo;
-  //  }
+  private ApartmentInfo processApartment(
+      Apartment apartment, Map<UUID, ApartmentInfo> apartmentInfoMap) {
+    UUID apartmentId = apartment.getId();
+    if (!apartmentInfoMap.containsKey(apartmentId)) {
+      // We get the mandatory tasks of the apartment
+      List<TaskDto> apartmentTasks =
+          apartment.getTasks().stream()
+              .filter(task -> task.getType() == TaskType.MANDATORY)
+              .map(TaskDto::new)
+              .collect(Collectors.toList());
+      // We get the next pending event of the apartment
+      Event nextPendingEvent =
+          eventRepository
+              .findFirstByCreatedByUsernameAndApartmentIdAndStateOrderByEndDateDesc(
+                  AuthUtils.getUsername(), apartmentId, EventState.PENDING)
+              .orElse(null);
+      ApartmentInfo aptInfo =
+          new ApartmentInfo(apartmentTasks, nextPendingEvent, apartment.getState());
+      apartmentInfoMap.put(apartmentId, aptInfo);
+      return aptInfo;
+    } else {
+      return apartmentInfoMap.get(apartmentId);
+    }
+  }
+
+  /**
+   * Processes an event for the scheduler: computes task/assignment counts and stores them in the
+   * event DTO. Does NOT fetch the previous event — that relationship is handled externally via the
+   * {@code previousEvent} map in {@link SchedulerInfo}.
+   */
+  private EventSchedulerDto processEventForScheduler(
+      Event event,
+      Map<UUID, ApartmentInfo> apartmentInfoMap,
+      Map<UUID, EventSchedulerDto> eventMap)
+      throws EntityNotFoundException {
+    if (event == null) {
+      return null;
+    }
+    // If the event has already been processed, we return the cached info
+    if (eventMap.containsKey(event.getId())) {
+      return eventMap.get(event.getId());
+    }
+
+    ApartmentInfo apartmentInfo = processApartment(event.getApartment(), apartmentInfoMap);
+    // We create the eventDto based on the event
+    EventSchedulerDto eventDto = new EventSchedulerDto(event);
+
+    // We get the assignments of the event
+    Set<Assignment> eventAssignments = event.getAssignments();
+    int nMandatoryAssignedTask = 0, nExtraAssignedTask = 0, nCompletedAssignments = 0;
+    List<AssignmentDto> uncompletedAssignments = new ArrayList<>();
+
+    List<TaskDto> apartmentMandatoryTasks = apartmentInfo.mandatoryTasks;
+    List<TaskDto> mandatoryUnassignedTasks = new ArrayList<>(apartmentMandatoryTasks);
+
+    // For each assignment of the event
+    for (Assignment assignment : eventAssignments) {
+      // If its mandatory task, we add it to the mandatory assigned tasks counter
+      if (assignment.getTask().getType() == TaskType.MANDATORY) {
+        nMandatoryAssignedTask++;
+        // We remove the task of the assignment from the list of mandatory unassigned tasks
+        mandatoryUnassignedTasks.removeIf(
+            taskDto -> taskDto.getId().equals(assignment.getTask().getId()));
+      } else {
+        // If its extra, we add it to the extra assigned tasks counter
+        nExtraAssignedTask++;
+      }
+      // If the assignment is finished, we add it to the completed assignments counter
+      if (assignment.getState() == AssignmentState.FINISHED) {
+        nCompletedAssignments++;
+      } else {
+        // If its not finished, we add it to the uncompleted assignments list
+        uncompletedAssignments.add(new AssignmentDto(assignment));
+      }
+    }
+    eventDto.setNMandatoryAssignedTasks(nMandatoryAssignedTask);
+    eventDto.setNExtraAssignedTasks(nExtraAssignedTask);
+    eventDto.setMandatoryUnassignedTasks(mandatoryUnassignedTasks);
+    eventDto.setNCompletedAssignments(nCompletedAssignments);
+    eventDto.setUncompletedAssignments(uncompletedAssignments);
+
+    eventMap.put(event.getId(), eventDto);
+    return eventDto;
+  }
+
+  public SchedulerInfo getSchedulerInfo(Instant startDate, Instant endDate)
+      throws EntityNotFoundException {
+    SchedulerInfo schedulerInfo = new SchedulerInfo();
+
+    // Events happening in the range of the scheduler range
+    List<Event> eventsOnRange =
+        eventRepository.findEventsByDateRange(AuthUtils.getUsername(), startDate, endDate);
+
+    // Cached info about processed apartments
+    Map<UUID, ApartmentInfo> apartmentInfoMap = new HashMap<>();
+    // Central normalized map: all processed event data, keyed by event ID
+    Map<UUID, EventSchedulerDto> eventMap = new HashMap<>();
+
+    // Process events on range to get scheduler info — store IDs only
+    for (Event event : eventsOnRange) {
+      EventSchedulerDto dto = processEventForScheduler(event, apartmentInfoMap, eventMap);
+      schedulerInfo.getBookings().add(dto.getId());
+    }
+
+    // Now we get the pending events until 5 days from now to check for alerts
+    List<Event> alertEvents =
+        eventRepository.advancedSearch(
+            AuthUtils.getUsername(),
+            null,
+            Set.of(EventState.PENDING.name()),
+            null,
+            null,
+            Instant.now(clock).plusSeconds(5 * 24 * 3600),
+            Pageable.unpaged());
+
+    // Group candidate events by apartment
+    Map<UUID, List<Event>> alertEventsByApartment = new HashMap<>();
+    for (Event event : alertEvents) {
+      alertEventsByApartment
+          .computeIfAbsent(event.getApartment().getId(), k -> new ArrayList<>())
+          .add(event);
+    }
+
+    final Instant RED_FLAG_LIMIT = Instant.now(clock).plusSeconds(2 * 24 * 3600);
+    final Instant YELLOW_FLAG_LIMIT = Instant.now(clock).plusSeconds(5 * 24 * 3600);
+
+    // === Alert logic: resolve predecessors, process them, and compute alerts ===
+    for (Map.Entry<UUID, List<Event>> entry : alertEventsByApartment.entrySet()) {
+      UUID apartmentId = entry.getKey();
+      List<Event> aptEvents = entry.getValue();
+      aptEvents.sort(Comparator.comparing(Event::getStartDate));
+
+      for (int i = 0; i < aptEvents.size(); i++) {
+        Event currentEvent = aptEvents.get(i);
+
+        // Get or create candidate DTO (may already exist from range processing)
+        EventSchedulerDto currentEventSched = eventMap.get(currentEvent.getId());
+        if (currentEventSched == null) {
+          currentEventSched = new EventSchedulerDto(currentEvent);
+          eventMap.put(currentEvent.getId(), currentEventSched);
+        }
+
+        // If the apartment is ready and this is the next pending event, skip alert
+        ApartmentInfo aptInfo = apartmentInfoMap.get(apartmentId);
+        if (aptInfo != null
+            && aptInfo.nextPendingEvent != null
+            && currentEvent.getId().equals(aptInfo.nextPendingEvent.getId())
+            && aptInfo.state == ApartmentState.READY) {
+          continue;
+        }
+
+        // Resolve predecessor
+        Event predecessor;
+        if (i == 0) {
+          // First event in the sorted list: query DB for previous event
+          predecessor =
+              eventRepository
+                  .findFirstEventBeforeDateWithState(
+                      AuthUtils.getAuthUser().getId(),
+                      apartmentId,
+                      currentEvent.getStartDate(),
+                      null)
+                  .orElse(null);
+        } else {
+          // Subsequent events: predecessor is the previous one in the sorted list
+          predecessor = aptEvents.get(i - 1);
+        }
+
+        if (predecessor == null) {
+          continue;
+        }
+
+        // Store predecessor relationship
+        schedulerInfo.getPreviousEvent().put(currentEvent.getId(), predecessor.getId());
+
+        // Process the predecessor (cached in eventMap) — this is what alert logic inspects
+        EventSchedulerDto previousEventSched =
+            processEventForScheduler(predecessor, apartmentInfoMap, eventMap);
+
+        // Mark overdue if the event start date is in the past
+        if (currentEvent.getStartDate().isBefore(Instant.now(clock))) {
+          currentEventSched.setOverdue(true);
+        }
+
+        // Red alert: event starts within 2 days
+        if (currentEvent.getStartDate().isBefore(RED_FLAG_LIMIT)) {
+          if (!previousEventSched.getMandatoryUnassignedTasks().isEmpty()) {
+            currentEventSched.setAlert(Alert.DAYS_LEFT_2_UNASSIGNED);
+            schedulerInfo.getRedAlertBookings().add(currentEventSched.getId());
+            continue;
+          }
+          if (hasUnfinishedTasks(previousEventSched)) {
+            currentEventSched.setAlert(Alert.DAYS_LEFT_2_NOT_COMPLETED);
+            schedulerInfo.getRedAlertBookings().add(currentEventSched.getId());
+            continue;
+          }
+        }
+
+        // Yellow alert: event starts within 5 days
+        if (currentEvent.getStartDate().isBefore(YELLOW_FLAG_LIMIT)) {
+          if (!previousEventSched.getMandatoryUnassignedTasks().isEmpty()) {
+            currentEventSched.setAlert(Alert.DAYS_LEFT_5_UNASSIGNED);
+            schedulerInfo.getYellowAlertBookings().add(currentEventSched.getId());
+          }
+        }
+      }
+    }
+
+    // Set the central event info map and propagate alerts to calendar events in eventInfo
+    schedulerInfo.setEventInfo(eventMap);
+
+    // Map assignments in range to DTOs (event is already JOIN FETCHed)
+    schedulerInfo.setAssignments(
+        assignmentRepository
+            .findByApartmentAndStateAndDateRange(
+                AuthUtils.getUsername(), null, null, startDate, endDate)
+            .stream()
+            .map(AssignmentDto::new)
+            .collect(Collectors.toSet()));
+    return schedulerInfo;
+  }
+
+  /** Checks whether the event scheduler DTO has any unfinished (pending) assignments. */
+  private boolean hasUnfinishedTasks(EventSchedulerDto dto) {
+    return dto.getUncompletedAssignments() != null
+        && !dto.getUncompletedAssignments().isEmpty();
+  }
 }

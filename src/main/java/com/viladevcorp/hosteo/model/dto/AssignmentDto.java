@@ -17,9 +17,12 @@ public class AssignmentDto extends BaseEntityDto {
     if (assignment == null) {
       return;
     }
-    BeanUtils.copyProperties(assignment, this, "task", "worker");
+    BeanUtils.copyProperties(assignment, this, "task", "worker", "event");
     this.task = new TaskWithApartmentDto(assignment.getTask());
     this.worker = new WorkerDto(assignment.getWorker());
+    if (assignment.getEvent() != null) {
+      this.event = new EventDto(assignment.getEvent());
+    }
   }
 
   private TaskWithApartmentDto task;
@@ -31,4 +34,6 @@ public class AssignmentDto extends BaseEntityDto {
   private WorkerDto worker;
 
   private AssignmentState state;
+
+  private EventDto event;
 }

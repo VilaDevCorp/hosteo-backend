@@ -31,6 +31,7 @@ import com.viladevcorp.hosteo.utils.ApiResponse;
 import com.viladevcorp.hosteo.utils.CodeErrors;
 
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.data.domain.Pageable;
 
 import static com.viladevcorp.hosteo.common.TestConstants.*;
 
