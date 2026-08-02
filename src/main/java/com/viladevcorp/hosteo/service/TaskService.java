@@ -58,7 +58,7 @@ public class TaskService {
             .apartment(apartment)
             .steps(form.getSteps())
             .build();
-
+    task = taskRepository.save(task);
     apartment.addTask(task);
     workflowService.calculateApartmentState(apartment.getId());
     return task;

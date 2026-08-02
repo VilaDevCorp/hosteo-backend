@@ -522,6 +522,7 @@ public class TestSetupHelper {
 
       Assignment conflictedAssignment =
           Assignment.builder()
+              .event(conflictedEvent)
               .task(taskConflict)
               .startDate(
                   TestUtils.dateStrToInstant(CREATED_ASSIGNMENT_AIRBNB_CONFLICT_START_DATE_1))
@@ -550,6 +551,7 @@ public class TestSetupHelper {
       Assignment conflictedAssignment =
           Assignment.builder()
               .task(taskConflict)
+              .event(conflictedEvent)
               .startDate(
                   TestUtils.dateStrToInstant(CREATED_ASSIGNMENT_BOOKING_CONFLICT_START_DATE_1))
               .endDate(
