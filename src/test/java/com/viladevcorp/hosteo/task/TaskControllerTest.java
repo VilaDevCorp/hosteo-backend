@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -199,7 +200,7 @@ class TaskControllerTest extends BaseControllerTest {
       form.setSteps(UPDATED_TASK_STEPS_1);
       mockMvc
           .perform(
-              patch("/api/task")
+              put("/api/task")
                   .contentType("application/json")
                   .content(objectMapper.writeValueAsString(form)))
           .andExpect(status().isOk());
@@ -224,7 +225,7 @@ class TaskControllerTest extends BaseControllerTest {
       form.setSteps(UPDATED_TASK_STEPS_1);
       mockMvc
           .perform(
-              patch("/api/task")
+              put("/api/task")
                   .contentType("application/json")
                   .content(objectMapper.writeValueAsString(form)))
           .andExpect(status().isNotFound());
@@ -242,7 +243,7 @@ class TaskControllerTest extends BaseControllerTest {
       form.setSteps(UPDATED_TASK_STEPS_1);
       mockMvc
           .perform(
-              patch("/api/task")
+              put("/api/task")
                   .contentType("application/json")
                   .content(objectMapper.writeValueAsString(form)))
           .andExpect(status().isNotFound());
@@ -259,7 +260,7 @@ class TaskControllerTest extends BaseControllerTest {
       form.setSteps(UPDATED_TASK_STEPS_1);
       mockMvc
           .perform(
-              patch("/api/task")
+              put("/api/task")
                   .contentType("application/json")
                   .content(objectMapper.writeValueAsString(form)))
           .andExpect(status().isBadRequest());
@@ -276,7 +277,7 @@ class TaskControllerTest extends BaseControllerTest {
       form.setSteps(UPDATED_TASK_STEPS_1);
       mockMvc
           .perform(
-              patch("/api/task")
+              put("/api/task")
                   .contentType("application/json")
                   .content(objectMapper.writeValueAsString(form)))
           .andExpect(status().isBadRequest());
@@ -294,7 +295,7 @@ class TaskControllerTest extends BaseControllerTest {
       form.setSteps(UPDATED_TASK_STEPS_1);
       mockMvc
           .perform(
-              patch("/api/task")
+              put("/api/task")
                   .contentType("application/json")
                   .content(objectMapper.writeValueAsString(form)))
           .andExpect(status().isBadRequest());
@@ -311,7 +312,7 @@ class TaskControllerTest extends BaseControllerTest {
       form.setSteps(UPDATED_TASK_STEPS_1);
       mockMvc
           .perform(
-              patch("/api/task")
+              put("/api/task")
                   .contentType("application/json")
                   .content(objectMapper.writeValueAsString(form)))
           .andExpect(status().isBadRequest());

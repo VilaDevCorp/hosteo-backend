@@ -1,6 +1,7 @@
 package com.viladevcorp.hosteo.repository;
 
 import com.viladevcorp.hosteo.model.Event;
+import com.viladevcorp.hosteo.model.types.EventState;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
@@ -22,7 +23,7 @@ public interface EventRepository extends EntityRepository<Event> {
               + "WHERE b.createdBy.username = :username "
               + "AND (:apartmentName IS NULL OR LOWER(b.apartment.name) LIKE :apartmentName) "
               + "AND (:states IS NULL OR b.state IN :states) "
-              + "AND (:types IS NULL OR b.type IN :type) "
+              + "AND (:types IS NULL OR b.type IN :types) "
               + "AND (CAST(:startDate AS TIMESTAMP) IS NULL OR b.endDate >= :startDate) "
               + "AND (CAST(:endDate AS TIMESTAMP) IS NULL OR b.startDate < :endDate) "
               + "ORDER BY b.startDate DESC")
@@ -64,17 +65,17 @@ public interface EventRepository extends EntityRepository<Event> {
   List<Event> findEventsBetween(
       String username, UUID apartmentId, Instant startDate, Instant endDate, UUID excludeEventId);
 
-  boolean existsEventByApartmentIdAndState(UUID apartmentId, String state);
+  boolean existsEventByApartmentIdAndState(UUID apartmentId, EventState state);
 
   Optional<Event> findFirstEventByCreatedByUsernameAndApartmentIdAndStateOrderByEndDateDesc(
       @Param("username") String username,
       @Param("apartmentId") UUID apartmentId,
-      @Param("state") String state);
+      @Param("state") EventState state);
 
   Optional<Event> findFirstEventByCreatedByUsernameAndApartmentIdAndStateOrderByEndDateAsc(
       @Param("username") String username,
       @Param("apartmentId") UUID apartmentId,
-      @Param("state") String state);
+      @Param("state") EventState state);
 
   @Query(
       value =
@@ -124,5 +125,5 @@ public interface EventRepository extends EntityRepository<Event> {
 
   @EntityGraph(attributePaths = {"assignments"})
   Optional<Event> findFirstByCreatedByUsernameAndApartmentIdAndStateOrderByEndDateDesc(
-      String username, UUID apartmentId, String state);
+      String username, UUID apartmentId, EventState state);
 }

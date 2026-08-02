@@ -1,10 +1,7 @@
 package com.viladevcorp.hosteo.assignment;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.Instant;
@@ -14,6 +11,7 @@ import java.util.UUID;
 import com.viladevcorp.hosteo.model.*;
 import com.viladevcorp.hosteo.model.dto.TaskDto;
 import com.viladevcorp.hosteo.model.forms.*;
+import com.viladevcorp.hosteo.model.types.ApartmentState;
 import com.viladevcorp.hosteo.model.types.EventState;
 import com.viladevcorp.hosteo.repository.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -68,6 +66,7 @@ class AssignmentControllerTest extends BaseControllerTest {
       Task assignmentTask = testSetupHelper.getTestTasks().get(NEW_ASSIGNMENT_TASK_POSITION);
       AssignmentCreateForm form = new AssignmentCreateForm();
       form.setTaskId(assignmentTask.getId());
+      form.setEventId(testSetupHelper.getTestEvents().get(NEW_ASSIGNMENT_EVENT_POSITION).getId());
       form.setStartDate(TestUtils.dateStrToInstant(NEW_ASSIGNMENT_START_DATE));
       form.setEndDate(
           TestUtils.dateStrToInstant(NEW_ASSIGNMENT_START_DATE)
@@ -204,6 +203,7 @@ class AssignmentControllerTest extends BaseControllerTest {
       Task assignmentTask = testSetupHelper.getTestTasks().get(NEW_ASSIGNMENT_TASK_POSITION);
       AssignmentCreateForm form = new AssignmentCreateForm();
       form.setTaskId(UUID.randomUUID());
+      form.setEventId(testSetupHelper.getTestEvents().get(NEW_ASSIGNMENT_EVENT_POSITION).getId());
       form.setStartDate(TestUtils.dateStrToInstant(NEW_ASSIGNMENT_START_DATE));
       form.setEndDate(
           TestUtils.dateStrToInstant(NEW_ASSIGNMENT_START_DATE)
@@ -227,10 +227,10 @@ class AssignmentControllerTest extends BaseControllerTest {
       Task assignmentTask = testSetupHelper.getTestTasks().get(NEW_ASSIGNMENT_TASK_POSITION);
       AssignmentCreateForm form = new AssignmentCreateForm();
       form.setTaskId(assignmentTask.getId());
-      form.setStartDate(TestUtils.dateStrToInstant(NEW_ASSIGNMENT_START_DATE));
-      form.setEndDate(
-          TestUtils.dateStrToInstant(NEW_ASSIGNMENT_START_DATE)
-              .plusSeconds(assignmentTask.getDuration() * 60L));
+      Instant instantToConflictWorker = TestUtils.dateStrToInstant(CREATED_ASSIGNMENT_START_DATE_5);
+      form.setEventId(testSetupHelper.getTestEvents().get(NEW_ASSIGNMENT_EVENT_POSITION).getId());
+      form.setStartDate(instantToConflictWorker);
+      form.setEndDate(instantToConflictWorker.plusSeconds(assignmentTask.getDuration() * 60L));
       form.setWorkerId(UUID.randomUUID());
       form.setState(NEW_ASSIGNMENT_STATE);
 
@@ -249,6 +249,7 @@ class AssignmentControllerTest extends BaseControllerTest {
       Task assignmentTask = testSetupHelper.getTestTasks().get(NEW_ASSIGNMENT_TASK_POSITION);
       AssignmentCreateForm form = new AssignmentCreateForm();
       form.setTaskId(assignmentTask.getId());
+      form.setEventId(testSetupHelper.getTestEvents().get(NEW_ASSIGNMENT_EVENT_POSITION).getId());
       form.setStartDate(TestUtils.dateStrToInstant(NEW_ASSIGNMENT_START_DATE));
       form.setEndDate(
           TestUtils.dateStrToInstant(NEW_ASSIGNMENT_START_DATE)
@@ -273,21 +274,25 @@ class AssignmentControllerTest extends BaseControllerTest {
           startDate1.plusSeconds(
               testSetupHelper.getTestTasks().get(NEW_ASSIGNMENT_TASK_POSITION).getDuration() * 60L);
       Task assignmentTask = testSetupHelper.getTestTasks().get(NEW_ASSIGNMENT_TASK_POSITION);
-      Worker workerTask = testSetupHelper.getTestWorkers().get(NEW_ASSIGNMENT_WORKER_POSITION);
+      Worker assignmentWorker =
+          testSetupHelper.getTestWorkers().get(NEW_ASSIGNMENT_WORKER_POSITION);
+      Event assignmentEvent = testSetupHelper.getTestEvents().get(NEW_ASSIGNMENT_EVENT_POSITION);
       assignmentRepository.save(
           Assignment.builder()
               .task(assignmentTask)
+              .event(assignmentEvent)
               .startDate(startDate1)
               .endDate(endDate1)
               .state(NEW_ASSIGNMENT_STATE)
-              .worker(workerTask)
+              .worker(assignmentWorker)
               .build());
 
       AssignmentCreateForm form = new AssignmentCreateForm();
       form.setTaskId(assignmentTask.getId());
+      form.setEventId(assignmentEvent.getId());
       form.setStartDate(startDate1.plusSeconds(24 * 60 * 60L));
       form.setEndDate(form.getStartDate().plusSeconds(assignmentTask.getDuration() * 60L));
-      form.setWorkerId(workerTask.getId());
+      form.setWorkerId(assignmentWorker.getId());
       form.setState(NEW_ASSIGNMENT_STATE);
 
       String resultString =
@@ -307,81 +312,6 @@ class AssignmentControllerTest extends BaseControllerTest {
     }
 
     @Test
-    void When_CreateAssignment_NonEventForAssignment_Conflict() throws Exception {
-      TestUtils.injectUserSession(ACTIVE_USER_USERNAME_1, userRepository);
-
-      Apartment apartmentWithoutEvents = Apartment.builder().name("NEW_APARTMENT").build();
-      apartmentWithoutEvents = apartmentRepository.save(apartmentWithoutEvents);
-
-      Task apartmentWithoutEventsTask =
-          Task.builder()
-              .name(NEW_TASK_NAME_1)
-              .type(NEW_TASK_TYPE_1)
-              .apartment(apartmentWithoutEvents)
-              .duration(120)
-              .build();
-
-      apartmentWithoutEventsTask = taskRepository.save(apartmentWithoutEventsTask);
-
-      AssignmentCreateForm form = new AssignmentCreateForm();
-      form.setTaskId(apartmentWithoutEventsTask.getId());
-      Instant startDate = TestUtils.dateStrToInstant(NEW_ASSIGNMENT_START_DATE);
-      Instant endDate = startDate.plusSeconds(apartmentWithoutEventsTask.getDuration() * 60L);
-      form.setStartDate(startDate);
-      form.setEndDate(endDate);
-      form.setWorkerId(
-          testSetupHelper.getTestWorkers().get(NEW_ASSIGNMENT_WORKER_POSITION).getId());
-      form.setState(NEW_ASSIGNMENT_STATE);
-
-      String resultString =
-          mockMvc
-              .perform(
-                  post("/api/assignment")
-                      .contentType("application/json")
-                      .content(objectMapper.writeValueAsString(form)))
-              .andExpect(status().isConflict())
-              .andReturn()
-              .getResponse()
-              .getContentAsString();
-
-      TypeReference<ApiResponse<AssignmentDto>> typeReference = new TypeReference<>() {};
-      ApiResponse<AssignmentDto> result = objectMapper.readValue(resultString, typeReference);
-      assertEquals(CodeErrors.NO_EVENT_FOR_ASSIGNMENT, result.getErrorCode());
-    }
-
-    @Test
-    void When_CreateAssignment_StartDateConflictsWithExistingEvent_Conflict() throws Exception {
-      TestUtils.injectUserSession(ACTIVE_USER_USERNAME_1, userRepository);
-
-      Task assignmentTask = testSetupHelper.getTestTasks().get(NEW_ASSIGNMENT_TASK_POSITION);
-
-      Instant startDate = TestUtils.dateStrToInstant(CREATED_EVENT_START_DATE_5);
-      Instant endDate = startDate.plusSeconds(assignmentTask.getDuration() * 60L);
-      AssignmentCreateForm form = new AssignmentCreateForm();
-      form.setTaskId(assignmentTask.getId());
-      form.setStartDate(startDate);
-      form.setEndDate(endDate);
-      form.setWorkerId(
-          testSetupHelper.getTestWorkers().get(NEW_ASSIGNMENT_WORKER_POSITION).getId());
-      form.setState(NEW_ASSIGNMENT_STATE);
-
-      String resultString =
-          mockMvc
-              .perform(
-                  post("/api/assignment")
-                      .contentType("application/json")
-                      .content(objectMapper.writeValueAsString(form)))
-              .andExpect(status().isConflict())
-              .andReturn()
-              .getResponse()
-              .getContentAsString();
-
-      TypeReference<ApiResponse<AssignmentDto>> typeReference = new TypeReference<>() {};
-      ApiResponse<AssignmentDto> result = objectMapper.readValue(resultString, typeReference);
-      assertEquals(CodeErrors.NOT_AVAILABLE_DATES, result.getErrorCode());
-    }
-
-    @Test
     void When_CreateAssignment_StartDateConflictsWithExistingAssignment_Conflict()
         throws Exception {
       TestUtils.injectUserSession(ACTIVE_USER_USERNAME_1, userRepository);
@@ -390,6 +320,7 @@ class AssignmentControllerTest extends BaseControllerTest {
       Task assignmentTask2 = testSetupHelper.getTestTasks().get(1);
       Worker assignmentWorker1 = testSetupHelper.getTestWorkers().get(0);
       Worker assignmentWorker2 = testSetupHelper.getTestWorkers().get(1);
+      Event assignmentEvent = testSetupHelper.getTestEvents().get(NEW_ASSIGNMENT_EVENT_POSITION);
 
       Instant startDate = TestUtils.dateStrToInstant(NEW_ASSIGNMENT_START_DATE);
       Instant endDate = startDate.plusSeconds(assignmentTask1.getDuration() * 60L);
@@ -397,6 +328,7 @@ class AssignmentControllerTest extends BaseControllerTest {
       assignmentRepository.save(
           Assignment.builder()
               .task(assignmentTask1)
+              .event(assignmentEvent)
               .startDate(startDate)
               .endDate(endDate)
               .worker(assignmentWorker1)
@@ -405,6 +337,7 @@ class AssignmentControllerTest extends BaseControllerTest {
 
       AssignmentCreateForm form = new AssignmentCreateForm();
       form.setTaskId(assignmentTask2.getId());
+      form.setEventId(assignmentEvent.getId());
       form.setStartDate(startDate);
       form.setEndDate(endDate);
       form.setWorkerId(assignmentWorker2.getId());
@@ -433,6 +366,7 @@ class AssignmentControllerTest extends BaseControllerTest {
       Task assignmentTask = testSetupHelper.getTestTasks().get(NEW_ASSIGNMENT_TASK_POSITION);
       AssignmentCreateForm form = new AssignmentCreateForm();
       form.setTaskId(assignmentTask.getId());
+      form.setEventId(testSetupHelper.getTestEvents().get(NEW_ASSIGNMENT_EVENT_POSITION).getId());
       form.setStartDate(TestUtils.dateStrToInstant(CREATED_ASSIGNMENT_START_DATE_5));
       form.setEndDate(
           TestUtils.dateStrToInstant(CREATED_ASSIGNMENT_START_DATE_5)
@@ -463,6 +397,7 @@ class AssignmentControllerTest extends BaseControllerTest {
       Task assignmentTask = testSetupHelper.getTestTasks().get(NEW_ASSIGNMENT_TASK_POSITION);
       AssignmentCreateForm form = new AssignmentCreateForm();
       form.setTaskId(assignmentTask.getId());
+      form.setEventId(testSetupHelper.getTestEvents().get(NEW_ASSIGNMENT_EVENT_POSITION).getId());
       form.setStartDate(TestUtils.dateStrToInstant(NEW_ASSIGNMENT_START_DATE));
       form.setEndDate(
           TestUtils.dateStrToInstant(NEW_ASSIGNMENT_START_DATE)
@@ -507,7 +442,7 @@ class AssignmentControllerTest extends BaseControllerTest {
 
       mockMvc
           .perform(
-              patch("/api/assignment")
+              put("/api/assignment")
                   .contentType("application/json")
                   .content(objectMapper.writeValueAsString(form)))
           .andExpect(status().isOk());
@@ -603,7 +538,7 @@ class AssignmentControllerTest extends BaseControllerTest {
 
       mockMvc
           .perform(
-              patch("/api/assignment")
+              put("/api/assignment")
                   .contentType("application/json")
                   .content(objectMapper.writeValueAsString(form)))
           .andExpect(status().isNotFound());
@@ -626,7 +561,7 @@ class AssignmentControllerTest extends BaseControllerTest {
 
       mockMvc
           .perform(
-              patch("/api/assignment")
+              put("/api/assignment")
                   .contentType("application/json")
                   .content(objectMapper.writeValueAsString(form)))
           .andExpect(status().isNotFound());
@@ -643,7 +578,7 @@ class AssignmentControllerTest extends BaseControllerTest {
 
       mockMvc
           .perform(
-              patch("/api/assignment")
+              put("/api/assignment")
                   .contentType("application/json")
                   .content(objectMapper.writeValueAsString(form)))
           .andExpect(status().isBadRequest());
@@ -659,7 +594,7 @@ class AssignmentControllerTest extends BaseControllerTest {
 
       mockMvc
           .perform(
-              patch("/api/assignment")
+              put("/api/assignment")
                   .contentType("application/json")
                   .content(objectMapper.writeValueAsString(form)))
           .andExpect(status().isBadRequest());
@@ -676,7 +611,7 @@ class AssignmentControllerTest extends BaseControllerTest {
 
       mockMvc
           .perform(
-              patch("/api/assignment")
+              put("/api/assignment")
                   .contentType("application/json")
                   .content(objectMapper.writeValueAsString(form)))
           .andExpect(status().isBadRequest());
@@ -693,7 +628,7 @@ class AssignmentControllerTest extends BaseControllerTest {
 
       mockMvc
           .perform(
-              patch("/api/assignment")
+              put("/api/assignment")
                   .contentType("application/json")
                   .content(objectMapper.writeValueAsString(form)))
           .andExpect(status().isBadRequest());
@@ -710,7 +645,7 @@ class AssignmentControllerTest extends BaseControllerTest {
 
       mockMvc
           .perform(
-              patch("/api/assignment")
+              put("/api/assignment")
                   .contentType("application/json")
                   .content(objectMapper.writeValueAsString(form)))
           .andExpect(status().isBadRequest());
@@ -733,7 +668,7 @@ class AssignmentControllerTest extends BaseControllerTest {
 
       mockMvc
           .perform(
-              patch("/api/assignment")
+              put("/api/assignment")
                   .contentType("application/json")
                   .content(objectMapper.writeValueAsString(form)))
           .andExpect(status().isNotFound());
@@ -980,11 +915,6 @@ class AssignmentControllerTest extends BaseControllerTest {
                   .contentType("application/json"))
           .andExpect(status().isOk());
 
-      relatedApartment =
-          apartmentRepository
-              .findById(relatedApartment.getId())
-              .orElseThrow(EntityNotFoundException::new);
-
       assignmentToComplete = testSetupHelper.getTestAssignments().get(3);
 
       mockMvc
@@ -997,11 +927,6 @@ class AssignmentControllerTest extends BaseControllerTest {
                           + AssignmentState.FINISHED)
                   .contentType("application/json"))
           .andExpect(status().isOk());
-
-      relatedApartment =
-          apartmentRepository
-              .findById(relatedApartment.getId())
-              .orElseThrow(EntityNotFoundException::new);
 
       assignmentToComplete = testSetupHelper.getTestAssignments().get(4);
 
@@ -1020,15 +945,20 @@ class AssignmentControllerTest extends BaseControllerTest {
           apartmentRepository
               .findById(relatedApartment.getId())
               .orElseThrow(EntityNotFoundException::new);
+
+      assertEquals(ApartmentState.READY, relatedApartment.getState());
     }
 
     @Test
     void WhenAddOrDeleteTask_ApartmentStateRecalculated() throws Exception {
       TestUtils.injectUserSession(ACTIVE_USER_USERNAME_1, userRepository);
 
+      // We create a task on an apartment with all tasks finished (so ready, but creating one should
+      // set the state to USED
       Apartment relatedApartment = testSetupHelper.getTestApartments().get(0);
       TaskCreateForm form = new TaskCreateForm();
       form.setName(NEW_TASK_NAME_1);
+      form.setCategory(NEW_TASK_CATEGORY_1);
       form.setType(NEW_TASK_TYPE_1);
       form.setDuration(NEW_TASK_DURATION_1);
       form.setApartmentId(relatedApartment.getId());
@@ -1050,7 +980,10 @@ class AssignmentControllerTest extends BaseControllerTest {
           apartmentRepository
               .findById(relatedApartment.getId())
               .orElseThrow(EntityNotFoundException::new);
+      // We check that the apartment is USED
+      assertEquals(ApartmentState.USED, relatedApartment.getState());
 
+      // Now we delete the task, so the apartment will go back to READY
       mockMvc
           .perform(delete("/api/task/" + result.getData().getId()).contentType("application/json"))
           .andExpect(status().isOk());
@@ -1058,12 +991,14 @@ class AssignmentControllerTest extends BaseControllerTest {
           apartmentRepository
               .findById(relatedApartment.getId())
               .orElseThrow(EntityNotFoundException::new);
+      assertEquals(ApartmentState.READY, relatedApartment.getState());
     }
 
     @Test
     void When_UpdatedAssignmentState_ApartmentStateRecalculated() throws Exception {
       TestUtils.injectUserSession(ACTIVE_USER_USERNAME_1, userRepository);
       Assignment assignmentToUpdate = testSetupHelper.getTestAssignments().get(0);
+      // We set the assignment back to PENDING, so the state of the apartment should go back to USED
       mockMvc
           .perform(
               patch(
@@ -1077,6 +1012,10 @@ class AssignmentControllerTest extends BaseControllerTest {
           apartmentRepository
               .findById(assignmentToUpdate.getTask().getApartment().getId())
               .orElseThrow(EntityNotFoundException::new);
+      assertEquals(ApartmentState.USED, apartment.getState());
+
+      // Now we update back the assignment state to FINISHED, so the apartment should go back to
+      // READY
       mockMvc
           .perform(
               patch(
@@ -1090,11 +1029,13 @@ class AssignmentControllerTest extends BaseControllerTest {
           apartmentRepository
               .findById(assignmentToUpdate.getTask().getApartment().getId())
               .orElseThrow(EntityNotFoundException::new);
+      assertEquals(ApartmentState.READY, apartment.getState());
     }
 
     @Test
     void When_CreateDeleteAssignment_ApartmentStateRecalculated() throws Exception {
       TestUtils.injectUserSession(ACTIVE_USER_USERNAME_1, userRepository);
+      // We delete one of the completed assignments so the apartment should change to USED
       Assignment assignment = testSetupHelper.getTestAssignments().get(0);
       mockMvc
           .perform(delete("/api/assignment/" + assignment.getId()).contentType("application/json"))
@@ -1103,9 +1044,14 @@ class AssignmentControllerTest extends BaseControllerTest {
           apartmentRepository
               .findById(assignment.getTask().getApartment().getId())
               .orElseThrow(EntityNotFoundException::new);
+      assertEquals(ApartmentState.USED, apartment.getState());
+
+      // We create back the completed assignment for the event, so the apartment is going to go back
+      // to READY
       AssignmentCreateForm form = new AssignmentCreateForm();
       form.setTaskId(
           testSetupHelper.getTestTasks().get(CREATED_ASSIGNMENT_TASK_POSITION_1).getId());
+      form.setEventId(testSetupHelper.getTestEvents().get(0).getId());
       form.setStartDate(TestUtils.dateStrToInstant(CREATED_ASSIGNMENT_START_DATE_1));
       form.setEndDate(
           TestUtils.dateStrToInstant(CREATED_ASSIGNMENT_START_DATE_1)
@@ -1128,6 +1074,7 @@ class AssignmentControllerTest extends BaseControllerTest {
           apartmentRepository
               .findById(assignment.getTask().getApartment().getId())
               .orElseThrow(EntityNotFoundException::new);
+      assertEquals(ApartmentState.READY, apartment.getState());
     }
   }
 }

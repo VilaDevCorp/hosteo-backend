@@ -1,11 +1,10 @@
 package com.viladevcorp.hosteo.model.dto;
 
-import com.viladevcorp.hosteo.model.Task;
+import com.viladevcorp.hosteo.model.Template;
 import com.viladevcorp.hosteo.model.types.CategoryEnum;
+import com.viladevcorp.hosteo.model.types.TaskType;
 import java.util.ArrayList;
 import java.util.List;
-
-import com.viladevcorp.hosteo.model.types.TaskType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -14,27 +13,22 @@ import org.springframework.beans.BeanUtils;
 @Getter
 @Setter
 @NoArgsConstructor
-public class TaskWithApartmentDto extends BaseEntityDto {
+public class TemplateDto extends BaseEntityDto {
 
-  public TaskWithApartmentDto(Task task) {
-    if (task == null) {
+  public TemplateDto(Template template) {
+    if (template == null) {
       return;
     }
-    BeanUtils.copyProperties(task, this, "apartment");
-    if (task.getApartment() != null) {
-      this.apartment = new ApartmentDto(task.getApartment());
-    }
+    BeanUtils.copyProperties(template, this);
   }
 
   private String name;
+
+  private TaskType type;
 
   private CategoryEnum category;
 
   private int duration;
 
-  private TaskType type;
-
   private List<String> steps = new ArrayList<>();
-
-  private ApartmentDto apartment;
 }

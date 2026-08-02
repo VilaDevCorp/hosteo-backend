@@ -4,7 +4,7 @@ import static com.viladevcorp.hosteo.common.TestConstants.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -170,7 +170,7 @@ class TemplateControllerTest extends BaseControllerTest {
       form.setSteps(UPDATED_TEMPLATE_STEPS_1);
       mockMvc
           .perform(
-              patch("/api/template")
+              put("/api/template")
                   .contentType("application/json")
                   .content(objectMapper.writeValueAsString(form)))
           .andExpect(status().isOk());
@@ -196,7 +196,7 @@ class TemplateControllerTest extends BaseControllerTest {
       form.setSteps(UPDATED_TEMPLATE_STEPS_1);
       mockMvc
           .perform(
-              patch("/api/template")
+              put("/api/template")
                   .contentType("application/json")
                   .content(objectMapper.writeValueAsString(form)))
           .andExpect(status().isNotFound());
@@ -214,7 +214,7 @@ class TemplateControllerTest extends BaseControllerTest {
       form.setSteps(UPDATED_TEMPLATE_STEPS_1);
       mockMvc
           .perform(
-              patch("/api/template")
+              put("/api/template")
                   .contentType("application/json")
                   .content(objectMapper.writeValueAsString(form)))
           .andExpect(status().isNotFound());
@@ -231,7 +231,7 @@ class TemplateControllerTest extends BaseControllerTest {
       form.setSteps(UPDATED_TEMPLATE_STEPS_1);
       mockMvc
           .perform(
-              patch("/api/template")
+              put("/api/template")
                   .contentType("application/json")
                   .content(objectMapper.writeValueAsString(form)))
           .andExpect(status().isBadRequest());
@@ -248,7 +248,7 @@ class TemplateControllerTest extends BaseControllerTest {
       form.setSteps(UPDATED_TEMPLATE_STEPS_1);
       mockMvc
           .perform(
-              patch("/api/template")
+              put("/api/template")
                   .contentType("application/json")
                   .content(objectMapper.writeValueAsString(form)))
           .andExpect(status().isBadRequest());
@@ -265,7 +265,7 @@ class TemplateControllerTest extends BaseControllerTest {
       form.setSteps(UPDATED_TEMPLATE_STEPS_1);
       mockMvc
           .perform(
-              patch("/api/template")
+              put("/api/template")
                   .contentType("application/json")
                   .content(objectMapper.writeValueAsString(form)))
           .andExpect(status().isBadRequest());
@@ -283,7 +283,7 @@ class TemplateControllerTest extends BaseControllerTest {
       form.setSteps(UPDATED_TEMPLATE_STEPS_1);
       mockMvc
           .perform(
-              patch("/api/template")
+              put("/api/template")
                   .contentType("application/json")
                   .content(objectMapper.writeValueAsString(form)))
           .andExpect(status().isBadRequest());
@@ -300,7 +300,7 @@ class TemplateControllerTest extends BaseControllerTest {
       form.setSteps(UPDATED_TEMPLATE_STEPS_1);
       mockMvc
           .perform(
-              patch("/api/template")
+              put("/api/template")
                   .contentType("application/json")
                   .content(objectMapper.writeValueAsString(form)))
           .andExpect(status().isBadRequest());

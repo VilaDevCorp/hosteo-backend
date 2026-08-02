@@ -28,9 +28,7 @@ import com.viladevcorp.hosteo.repository.WorkerRepository;
 import com.viladevcorp.hosteo.utils.ApiResponse;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class WorkerControllerTest extends BaseControllerTest {
@@ -162,7 +160,7 @@ class WorkerControllerTest extends BaseControllerTest {
 
       mockMvc
           .perform(
-              patch("/api/worker")
+              put("/api/worker")
                   .contentType("application/json")
                   .content(objectMapper.writeValueAsString(form)))
           .andExpect(status().isOk());
@@ -184,7 +182,7 @@ class WorkerControllerTest extends BaseControllerTest {
 
       mockMvc
           .perform(
-              patch("/api/worker")
+              put("/api/worker")
                   .contentType("application/json")
                   .content(objectMapper.writeValueAsString(form)))
           .andExpect(status().isNotFound());
@@ -199,7 +197,7 @@ class WorkerControllerTest extends BaseControllerTest {
 
       mockMvc
           .perform(
-              patch("/api/worker")
+              put("/api/worker")
                   .contentType("application/json")
                   .content(objectMapper.writeValueAsString(form)))
           .andExpect(status().isNotFound());
@@ -216,7 +214,7 @@ class WorkerControllerTest extends BaseControllerTest {
 
       mockMvc
           .perform(
-              patch("/api/worker")
+              put("/api/worker")
                   .contentType("application/json")
                   .content(objectMapper.writeValueAsString(form)))
           .andExpect(status().isBadRequest());

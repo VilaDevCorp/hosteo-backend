@@ -13,7 +13,7 @@ import com.viladevcorp.hosteo.repository.EventRepository;
 import com.viladevcorp.hosteo.utils.AuthUtils;
 import com.viladevcorp.hosteo.utils.CodeErrors;
 import com.viladevcorp.hosteo.utils.ServiceUtils;
-import java.time.Instant;
+
 import java.util.*;
 import jakarta.persistence.EntityNotFoundException;
 
@@ -23,7 +23,6 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
@@ -126,7 +125,7 @@ public class EventService {
       } catch (PrevOfFinishedCannotBeNotPendingOrInProgress e) {
         errors.add(
             new EventUpdateError(
-                event, CodeErrors.PREV_OF_FINISHED_CANNOT_BE_NOT_PENDING_OR_INPROGRESS));
+                event, CodeErrors.PREV_OF_FINISHED_CANNOT_BE_PENDING_OR_INPROGRESS));
       } catch (PrevOfInProgressCannotBePendingOrInProgress e) {
         errors.add(
             new EventUpdateError(
@@ -201,6 +200,7 @@ public class EventService {
   public void deleteEvent(UUID id) throws EntityNotFoundException {
     Event event = getEventById(id);
     eventRepository.delete(event);
+    event.getApartment().getEvents().remove(event);
     workflowService.calculateApartmentState(event.getApartment().getId());
   }
 }

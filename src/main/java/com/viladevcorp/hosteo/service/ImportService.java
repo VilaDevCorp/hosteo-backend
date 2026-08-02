@@ -41,7 +41,7 @@ public class ImportService {
   private final EventRepository eventRepository;
   private final AssignmentRepository assignmentRepository;
   private final ApartmentRepository apartmentRepository;
-  private final EventService eventService;
+  private final EventProcessor eventProcessor;
 
   @Autowired
   public ImportService(
@@ -49,12 +49,12 @@ public class ImportService {
       EventRepository eventRepository,
       AssignmentRepository assignmentRepository,
       ApartmentRepository apartmentRepository,
-      EventService eventService) {
+      EventProcessor eventProcessor) {
     this.apartmentRepository = apartmentRepository;
     this.eventRepository = eventRepository;
     this.impBookingRepository = impBookingRepository;
     this.assignmentRepository = assignmentRepository;
-    this.eventService = eventService;
+    this.eventProcessor = eventProcessor;
   }
 
   public static final int AIRBNB_START_DATE_POSITION = 4;
@@ -266,10 +266,11 @@ public class ImportService {
             importErrorNumber.getAndIncrement();
             return;
           }
-          EventCreateForm bookingForm =
+          EventCreateForm eventForm =
               EventCreateForm.builder()
                   .type(EventType.BOOKING)
                   .apartmentId(impBooking.getApartment().getId())
+                  .type(EventType.BOOKING)
                   .startDate(impBooking.getStartDate())
                   .endDate(impBooking.getEndDate())
                   .name(impBooking.getName())
@@ -278,7 +279,7 @@ public class ImportService {
                   .build();
           String createError = null;
           try {
-            eventService.createEventInNewTransaction(bookingForm);
+            eventProcessor.executeCreateEventLogic(eventForm);
             importedBookingIds.add(impBooking.getId());
             return;
           } catch (NotAvailableDatesException e) {
@@ -286,7 +287,7 @@ public class ImportService {
           } catch (PrevOfInProgressCannotBePendingOrInProgress e) {
             createError = CodeErrors.PREV_OF_INPROGRESS_CANNOT_BE_PENDING_OR_INPROGRESS;
           } catch (PrevOfFinishedCannotBeNotPendingOrInProgress e) {
-            createError = CodeErrors.PREV_OF_FINISHED_CANNOT_BE_NOT_PENDING_OR_INPROGRESS;
+            createError = CodeErrors.PREV_OF_FINISHED_CANNOT_BE_PENDING_OR_INPROGRESS;
           } catch (NextOfPendingCannotBeInprogressOrFinished e) {
             createError = CodeErrors.NEXT_OF_PENDING_CANNOT_BE_INPROGRESS_OR_FINISHED;
           } catch (NextOfInProgressCannotBeFinishedOrInProgress e) {

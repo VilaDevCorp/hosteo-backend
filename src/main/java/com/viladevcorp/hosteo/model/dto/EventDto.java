@@ -9,27 +9,28 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.beans.BeanUtils;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Getter
 @Setter
 @NoArgsConstructor
 public class EventDto extends BaseEntityDto {
 
-    private EventType type;
-    private EventSource source;
-    private EventState state;
-    private ApartmentDto apartment;
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
+  private String name;
+  private EventType type;
+  private EventSource source;
+  private EventState state;
+  private ApartmentDto apartment;
+  private Instant startDate;
+  private Instant endDate;
 
-    public EventDto(Event event) {
-        if (event == null) {
-            return;
-        }
-        BeanUtils.copyProperties(event, this, "apartment");
-        if (event.getApartment() != null) {
-            this.apartment = new ApartmentDto(event.getApartment());
-        }
+  public EventDto(Event event) {
+    if (event == null) {
+      return;
     }
+    BeanUtils.copyProperties(event, this, "apartment");
+    if (event.getApartment() != null) {
+      this.apartment = new ApartmentDto(event.getApartment());
+    }
+  }
 }

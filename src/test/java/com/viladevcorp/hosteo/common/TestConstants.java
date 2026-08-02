@@ -87,35 +87,43 @@ public class TestConstants {
   public static final String CREATED_EVENT_START_DATE_1 = "2025-11-21 15:30:00";
   public static final String CREATED_EVENT_END_DATE_1 = "2025-11-25 10:00:00";
   public static final EventState CREATED_EVENT_STATE_1 = EventState.FINISHED;
+  public static final EventType CREATED_EVENT_TYPE_1 = EventType.BOOKING;
   public static final int CREATED_EVENT_APARTMENT_POSITION_1 = 0;
 
   public static final String CREATED_EVENT_NAME_2 = "Test Event 2";
   public static final String CREATED_EVENT_START_DATE_2 = "2025-12-01 14:00:00";
   public static final String CREATED_EVENT_END_DATE_2 = "2025-12-05 11:00:00";
   public static final EventState CREATED_EVENT_STATE_2 = EventState.IN_PROGRESS;
+  public static final EventType CREATED_EVENT_TYPE_2 = EventType.BOOKING;
   public static final int CREATED_EVENT_APARTMENT_POSITION_2 = 1;
 
   public static final String CREATED_EVENT_NAME_3 = "Test Event 3";
   public static final String CREATED_EVENT_START_DATE_3 = "2026-01-10 16:00:00";
   public static final String CREATED_EVENT_END_DATE_3 = "2026-01-15 09:00:00";
   public static final EventState CREATED_EVENT_STATE_3 = EventState.PENDING;
+  public static final EventType CREATED_EVENT_TYPE_3 = EventType.BOOKING;
   public static final int CREATED_EVENT_APARTMENT_POSITION_3 = 0;
 
   public static final String CREATED_EVENT_NAME_4 = "Test Event 4";
   public static final String CREATED_EVENT_START_DATE_4 = "2026-02-20 13:00:00";
   public static final String CREATED_EVENT_END_DATE_4 = "2026-02-25 12:00:00";
   public static final EventState CREATED_EVENT_STATE_4 = EventState.PENDING;
+  public static final EventType CREATED_EVENT_TYPE_4 = EventType.BOOKING;
+
   public static final int CREATED_EVENT_APARTMENT_POSITION_4 = 1;
 
   public static final String CREATED_EVENT_NAME_5 = "Test Event 5";
   public static final String CREATED_EVENT_START_DATE_5 = "2026-01-20 16:00:00";
   public static final String CREATED_EVENT_END_DATE_5 = "2026-01-25 09:00:00";
   public static final EventState CREATED_EVENT_STATE_5 = EventState.PENDING;
+  public static final EventType CREATED_EVENT_TYPE_5 = EventType.BOOKING;
+
   public static final int CREATED_EVENT_APARTMENT_POSITION_5 = 0;
 
   public static final String NEW_EVENT_NAME = "New Event";
   public static final String NEW_EVENT_START_DATE = "2026-03-01 14:00:00";
   public static final String NEW_EVENT_END_DATE = "2026-03-05 11:00:00";
+  public static final EventType NEW_EVENT_TYPE_1 = EventType.BOOKING;
   public static final EventState NEW_EVENT_STATE = EventState.PENDING;
   public static final EventSource NEW_EVENT_SOURCE = EventSource.NONE;
   public static final int NEW_EVENT_APARTMENT_POSITION = 0;
@@ -125,6 +133,7 @@ public class TestConstants {
   public static final EventState UPDATED_EVENT_STATE = EventState.FINISHED;
   public static final String UPDATED_EVENT_START_DATE = "2025-11-21 16:30:00";
   public static final String UPDATED_EVENT_END_DATE = "2025-11-25 15:00:00";
+  public static final EventType UPDATED_EVENT_TYPE = EventType.MAINTENANCE;
   public static final int UPDATED_EVENT_APARTMENT_POSITION = 1;
 
   // Templates
@@ -206,31 +215,37 @@ public class TestConstants {
   public static final String CREATED_ASSIGNMENT_START_DATE_1 = "2025-11-26 10:00:00";
   public static final int CREATED_ASSIGNMENT_TASK_POSITION_1 = 0;
   public static final int CREATED_ASSIGNMENT_WORKER_POSITION_1 = 0;
+  public static final int CREATED_ASSIGNMENT_EVENT_POSITION_1 = 0;
 
   public static final AssignmentState CREATED_ASSIGNMENT_STATE_2 = AssignmentState.FINISHED;
   public static final String CREATED_ASSIGNMENT_START_DATE_2 = "2025-11-26 14:00:00";
   public static final int CREATED_ASSIGNMENT_TASK_POSITION_2 = 1;
   public static final int CREATED_ASSIGNMENT_WORKER_POSITION_2 = 0;
+  public static final int CREATED_ASSIGNMENT_EVENT_POSITION_2 = 0;
 
   public static final AssignmentState CREATED_ASSIGNMENT_STATE_3 = AssignmentState.PENDING;
   public static final String CREATED_ASSIGNMENT_START_DATE_3 = "2025-12-06 12:00:00";
   public static final int CREATED_ASSIGNMENT_TASK_POSITION_3 = 2;
   public static final int CREATED_ASSIGNMENT_WORKER_POSITION_3 = 1;
+  public static final int CREATED_ASSIGNMENT_EVENT_POSITION_3 = 1;
 
   public static final AssignmentState CREATED_ASSIGNMENT_STATE_4 = AssignmentState.PENDING;
   public static final String CREATED_ASSIGNMENT_START_DATE_4 = "2025-12-06 16:00:00";
   public static final int CREATED_ASSIGNMENT_TASK_POSITION_4 = 4;
   public static final int CREATED_ASSIGNMENT_WORKER_POSITION_4 = 1;
+  public static final int CREATED_ASSIGNMENT_EVENT_POSITION_4 = 1;
 
   public static final AssignmentState CREATED_ASSIGNMENT_STATE_5 = AssignmentState.PENDING;
   public static final String CREATED_ASSIGNMENT_START_DATE_5 = "2026-01-16 16:00:00";
   public static final int CREATED_ASSIGNMENT_TASK_POSITION_5 = 3;
   public static final int CREATED_ASSIGNMENT_WORKER_POSITION_5 = 0;
+  public static final int CREATED_ASSIGNMENT_EVENT_POSITION_5 = 1;
 
   public static final AssignmentState NEW_ASSIGNMENT_STATE = AssignmentState.PENDING;
   public static final String NEW_ASSIGNMENT_START_DATE = "2026-01-15 10:00:00";
   public static final int NEW_ASSIGNMENT_TASK_POSITION = 0;
   public static final int NEW_ASSIGNMENT_WORKER_POSITION = 0;
+  public static final int NEW_ASSIGNMENT_EVENT_POSITION = 2;
 
   public static final String NEW_ASSIGNMENT_START_DATE_BEFORE_ENDING_EVENT_START_DATE =
       "2026-01-09 09:00:00";
@@ -289,11 +304,11 @@ public class TestConstants {
   public static final String CONFLICTED_EVENT_AIRBNB_NAME_3 = "Carolina Damiani";
   public static final String CONFLICTED_EVENT_BOOKING_NAME_3 = "ernesto valverde";
 
-  public static final String CONFLICT_IMPORT_EVENT_AIRBNB_NAME = "Anna Janning";
-  public static final String CONFLICT_IMPORT_EVENT_BOOKING_NAME = "Lucie Říhová";
+  public static final String CONFLICTED_IMPORT_EVENT_AIRBNB_NAME = "Anna Janning";
+  public static final String CONFLICTED_IMPORT_EVENT_BOOKING_NAME = "Lucie Říhová";
 
   public static final String CREATED_EVENT_CONFLICT_NAME_2 = "Test Event 2";
   public static final String CREATED_EVENT_AIRBNB_CONFLICT_START_DATE_2 = "2025-10-07 15:30:00";
   public static final String CREATED_EVENT_AIRBNB_CONFLICT_END_DATE_2 = "2025-10-08 10:00:00";
-  public static final String CONFLICT_EVENT_ON_CREATION_NAME = "Alexandra Heinen";
+  public static final String CONFLICTED_EVENT_ON_CREATION_NAME = "Alexandra Heinen";
 }

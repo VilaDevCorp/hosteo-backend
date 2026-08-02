@@ -135,15 +135,16 @@ public class AssignmentProcessor {
             AuthUtils.getAuthUser().getId(), apartmentId, event.getStartDate(), null);
     // Validate that the assignment endDate is not after the next event startDate
     if (nextEventOpt.isPresent()) {
-      if (endDate.isAfter(nextEventOpt.get().getStartDate()))
+      if (endDate.isAfter(nextEventOpt.get().getStartDate())) {
         log.error(
             "[AssignmentService.validateAssignment] - The assignment ends after the next event starts. "
                 + "Event ID {} ends at {} and assignment starts at {}",
             event.getId(),
             event.getEndDate(),
             startDate);
-      throw new AssignmentEndsAfterNextEventStarts(
-          "An assignment cannot start before the next event starts");
+        throw new AssignmentEndsAfterNextEventStarts(
+            "An assignment cannot end after the next event starts");
+      }
     }
 
     // Validate the event is finished to complete the task
@@ -165,14 +166,14 @@ public class AssignmentProcessor {
           EntityNotFoundException {
 
     UUID apartmentId = event.getApartment().getId();
-    // If the event is not finished, we can modify the assignments
+    // If the event is not finished, we cannot modify the assignments
     if (!event.getState().isFinished()) {
       return;
     }
     // We get the last finished event for the apartment
     Optional<Event> lastFinishedEventOpt =
         eventRepository.findFirstByCreatedByUsernameAndApartmentIdAndStateOrderByEndDateDesc(
-            AuthUtils.getUsername(), apartmentId, EventState.FINISHED.toString());
+            AuthUtils.getUsername(), apartmentId, EventState.FINISHED);
     // If there is no last finished event, we can modify the assignments (the event to modify has to
     // be pending or in progress)
     if (lastFinishedEventOpt.isEmpty()) {

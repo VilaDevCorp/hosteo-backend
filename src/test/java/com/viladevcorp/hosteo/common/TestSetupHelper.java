@@ -3,6 +3,7 @@ package com.viladevcorp.hosteo.common;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.viladevcorp.hosteo.model.types.EventType;
 import com.viladevcorp.hosteo.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -179,46 +180,56 @@ public class TestSetupHelper {
     Event ev1 =
         eventRepository.save(
             Event.builder()
+                .name(CREATED_EVENT_NAME_1)
                 .apartment(testApartments.get(CREATED_EVENT_APARTMENT_POSITION_1))
                 .startDate(TestUtils.dateStrToInstant(CREATED_EVENT_START_DATE_1))
                 .endDate(TestUtils.dateStrToInstant(CREATED_EVENT_END_DATE_1))
                 .state(CREATED_EVENT_STATE_1)
+                .type(CREATED_EVENT_TYPE_1)
                 .build());
 
     Event ev2 =
         eventRepository.save(
             Event.builder()
+                .name(CREATED_EVENT_NAME_2)
                 .apartment(testApartments.get(CREATED_EVENT_APARTMENT_POSITION_2))
                 .startDate(TestUtils.dateStrToInstant(CREATED_EVENT_START_DATE_2))
                 .endDate(TestUtils.dateStrToInstant(CREATED_EVENT_END_DATE_2))
                 .state(CREATED_EVENT_STATE_2)
+                .type(CREATED_EVENT_TYPE_2)
                 .build());
 
     Event ev3 =
         eventRepository.save(
             Event.builder()
+                .name(CREATED_EVENT_NAME_3)
                 .apartment(testApartments.get(CREATED_EVENT_APARTMENT_POSITION_3))
                 .startDate(TestUtils.dateStrToInstant(CREATED_EVENT_START_DATE_3))
                 .endDate(TestUtils.dateStrToInstant(CREATED_EVENT_END_DATE_3))
                 .state(CREATED_EVENT_STATE_3)
+                .type(CREATED_EVENT_TYPE_3)
                 .build());
 
     Event ev4 =
         eventRepository.save(
             Event.builder()
+                .name(CREATED_EVENT_NAME_4)
                 .apartment(testApartments.get(CREATED_EVENT_APARTMENT_POSITION_4))
                 .startDate(TestUtils.dateStrToInstant(CREATED_EVENT_START_DATE_4))
                 .endDate(TestUtils.dateStrToInstant(CREATED_EVENT_END_DATE_4))
                 .state(CREATED_EVENT_STATE_4)
+                .type(CREATED_EVENT_TYPE_4)
                 .build());
 
     Event ev5 =
         eventRepository.save(
             Event.builder()
+                .name(CREATED_EVENT_NAME_5)
                 .apartment(testApartments.get(CREATED_EVENT_APARTMENT_POSITION_5))
                 .startDate(TestUtils.dateStrToInstant(CREATED_EVENT_START_DATE_5))
                 .endDate(TestUtils.dateStrToInstant(CREATED_EVENT_END_DATE_5))
                 .state(CREATED_EVENT_STATE_5)
+                .type(CREATED_EVENT_TYPE_5)
                 .build());
 
     testEvents = List.of(ev1, ev2, ev3, ev4, ev5);
@@ -358,6 +369,7 @@ public class TestSetupHelper {
     Assignment assignment1 =
         Assignment.builder()
             .task(testTasks.get(CREATED_ASSIGNMENT_TASK_POSITION_1))
+            .event(testEvents.get(CREATED_ASSIGNMENT_EVENT_POSITION_1))
             .startDate(TestUtils.dateStrToInstant(CREATED_ASSIGNMENT_START_DATE_1))
             .endDate(
                 TestUtils.dateStrToInstant(CREATED_ASSIGNMENT_START_DATE_1)
@@ -371,6 +383,7 @@ public class TestSetupHelper {
     Assignment assignment2 =
         Assignment.builder()
             .task(testTasks.get(CREATED_ASSIGNMENT_TASK_POSITION_2))
+            .event(testEvents.get(CREATED_ASSIGNMENT_EVENT_POSITION_2))
             .startDate(TestUtils.dateStrToInstant(CREATED_ASSIGNMENT_START_DATE_2))
             .endDate(
                 TestUtils.dateStrToInstant(CREATED_ASSIGNMENT_START_DATE_2)
@@ -384,6 +397,7 @@ public class TestSetupHelper {
     Assignment assignment3 =
         Assignment.builder()
             .task(testTasks.get(CREATED_ASSIGNMENT_TASK_POSITION_3))
+            .event(testEvents.get(CREATED_ASSIGNMENT_EVENT_POSITION_3))
             .startDate(TestUtils.dateStrToInstant(CREATED_ASSIGNMENT_START_DATE_3))
             .endDate(
                 TestUtils.dateStrToInstant(CREATED_ASSIGNMENT_START_DATE_3)
@@ -397,6 +411,7 @@ public class TestSetupHelper {
     Assignment assignment4 =
         Assignment.builder()
             .task(testTasks.get(CREATED_ASSIGNMENT_TASK_POSITION_4))
+            .event(testEvents.get(CREATED_ASSIGNMENT_EVENT_POSITION_4))
             .startDate(TestUtils.dateStrToInstant(CREATED_ASSIGNMENT_START_DATE_4))
             .endDate(
                 TestUtils.dateStrToInstant(CREATED_ASSIGNMENT_START_DATE_4)
@@ -411,6 +426,7 @@ public class TestSetupHelper {
     Assignment assignment5 =
         Assignment.builder()
             .task(testTasks.get(CREATED_ASSIGNMENT_TASK_POSITION_5))
+            .event(testEvents.get(CREATED_ASSIGNMENT_EVENT_POSITION_5))
             .startDate(TestUtils.dateStrToInstant(CREATED_ASSIGNMENT_START_DATE_5))
             .endDate(
                 TestUtils.dateStrToInstant(CREATED_ASSIGNMENT_START_DATE_5)
@@ -471,6 +487,8 @@ public class TestSetupHelper {
   }
 
   public void resetImportApartments() {
+    assignmentRepository.deleteAll();
+    eventRepository.deleteAll();
     apartmentRepository.deleteAll();
     impBookingRepository.deleteAll();
     createTestImportApartments();
@@ -492,7 +510,9 @@ public class TestSetupHelper {
       // Create airbnb conflicts before import
       Event conflictedEvent =
           Event.builder()
+              .name(CREATED_EVENT_CONFLICT_NAME_1)
               .state(CREATED_EVENT_CONFLICT_STATE_1)
+              .type(EventType.BOOKING)
               .apartment(testApartments.get(CREATED_EVENT_CONFLICT_APARTMENT_POSITION_1))
               .startDate(TestUtils.dateStrToInstant(CREATED_EVENT_AIRBNB_CONFLICT_START_DATE_1))
               .endDate(TestUtils.dateStrToInstant(CREATED_EVENT_AIRBNB_CONFLICT_END_DATE_1))
@@ -517,7 +537,9 @@ public class TestSetupHelper {
       // Create booking conflicts before import
       Event conflictedEvent =
           Event.builder()
+              .name(CREATED_EVENT_CONFLICT_NAME_1)
               .state(CREATED_EVENT_CONFLICT_STATE_1)
+              .type(EventType.BOOKING)
               .apartment(testApartments.get(CREATED_EVENT_CONFLICT_APARTMENT_POSITION_1))
               .startDate(TestUtils.dateStrToInstant(CREATED_EVENT_BOOKING_CONFLICT_START_DATE_1))
               .endDate(TestUtils.dateStrToInstant(CREATED_EVENT_BOOKING_CONFLICT_END_DATE_1))

@@ -156,6 +156,7 @@ public class EventProcessor {
             .build();
 
     Event result = eventRepository.save(event);
+    event.getApartment().getEvents().add(result);
     workflowService.calculateApartmentState(form.getApartmentId());
     validateEventState(form.getApartmentId(), form.getState(), form.getStartDate());
     return result;

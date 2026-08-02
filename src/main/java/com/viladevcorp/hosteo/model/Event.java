@@ -6,14 +6,11 @@ import com.viladevcorp.hosteo.model.types.EventState;
 import com.viladevcorp.hosteo.model.types.EventType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -45,7 +42,8 @@ public class Event extends BaseEntity {
   private Apartment apartment;
 
   @OneToMany(mappedBy = "event")
-  private Set<Assignment> assignments;
+  @Builder.Default
+  private Set<Assignment> assignments = new HashSet<>();
 
   @NotNull
   @Column(nullable = false)

@@ -20,7 +20,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import javax.management.InstanceNotFoundException;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -28,6 +28,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
@@ -60,7 +61,7 @@ public class EventController {
       Event event = eventService.createEvent(form);
       log.info("[EventController.createEvent] - Event created successfully");
       return ResponseEntity.ok().body(new ApiResponse<>(new EventDto(event)));
-    } catch (InstanceNotFoundException e) {
+    } catch (EntityNotFoundException e) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(new ApiResponse<>(null, "Apartment not found"));
     } catch (NotAvailableDatesException e) {
@@ -85,11 +86,11 @@ public class EventController {
       return ResponseEntity.status(HttpStatus.CONFLICT)
           .body(
               new ApiResponse<>(
-                  CodeErrors.PREV_OF_FINISHED_CANNOT_BE_NOT_PENDING_OR_INPROGRESS, e.getMessage()));
+                  CodeErrors.PREV_OF_FINISHED_CANNOT_BE_PENDING_OR_INPROGRESS, e.getMessage()));
     }
   }
 
-  @PatchMapping("/event")
+  @PutMapping("/event")
   public ResponseEntity<ApiResponse<EventDto>> updateEvent(
       @Valid @RequestBody EventUpdateForm form, BindingResult bindingResult) {
     log.info("[EventController.updateEvent] - Updating event");
@@ -104,7 +105,7 @@ public class EventController {
       Event event = eventService.updateEvent(form);
       log.info("[EventController.updateEvent] - Event updated successfully");
       return ResponseEntity.ok().body(new ApiResponse<>(new EventDto(event)));
-    } catch (InstanceNotFoundException e) {
+    } catch (EntityNotFoundException e) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(new ApiResponse<>(null, e.getMessage()));
     } catch (NotAvailableDatesException e) {
@@ -129,7 +130,7 @@ public class EventController {
       return ResponseEntity.status(HttpStatus.CONFLICT)
           .body(
               new ApiResponse<>(
-                  CodeErrors.PREV_OF_FINISHED_CANNOT_BE_NOT_PENDING_OR_INPROGRESS, e.getMessage()));
+                  CodeErrors.PREV_OF_FINISHED_CANNOT_BE_PENDING_OR_INPROGRESS, e.getMessage()));
     }
   }
 
@@ -141,7 +142,7 @@ public class EventController {
       Event event = eventService.updateEventState(id, state);
       log.info("[EventController.updateEventState] - Event state updated successfully");
       return ResponseEntity.ok().body(new ApiResponse<>(new EventDto(event)));
-    } catch (InstanceNotFoundException e) {
+    } catch (EntityNotFoundException e) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(new ApiResponse<>(null, e.getMessage()));
     } catch (NextOfPendingCannotBeInprogressOrFinished e) {
@@ -163,7 +164,7 @@ public class EventController {
       return ResponseEntity.status(HttpStatus.CONFLICT)
           .body(
               new ApiResponse<>(
-                  CodeErrors.PREV_OF_FINISHED_CANNOT_BE_NOT_PENDING_OR_INPROGRESS, e.getMessage()));
+                  CodeErrors.PREV_OF_FINISHED_CANNOT_BE_PENDING_OR_INPROGRESS, e.getMessage()));
     }
   }
 
@@ -183,7 +184,7 @@ public class EventController {
       EventWithAssignmentsDto event = eventService.getEventByIdWithAssigments(id);
       log.info("[EventController.getEvent] - Event found successfully");
       return ResponseEntity.ok().body(new ApiResponse<>(event));
-    } catch (InstanceNotFoundException e) {
+    } catch (EntityNotFoundException e) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(new ApiResponse<>(null, e.getMessage()));
     }
@@ -213,13 +214,13 @@ public class EventController {
       eventService.deleteEvent(id);
       log.info("[EventController.deleteEvent] - Event deleted successfully");
       return ResponseEntity.ok().body(new ApiResponse<>(null, "Event deleted successfully."));
-    } catch (InstanceNotFoundException e) {
+    } catch (EntityNotFoundException e) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(new ApiResponse<>(null, e.getMessage()));
     }
   }
 
-  @GetMapping("/event/import/exists")
+  @GetMapping("/booking/import/exists")
   public ResponseEntity<Void> checkExistentImports() {
     log.info("[EventController.checkExistentImports] - Checking existent imports");
     if (importService.existsImportInProgress()) {
@@ -231,7 +232,7 @@ public class EventController {
     }
   }
 
-  @GetMapping("/event/import")
+  @GetMapping("/booking/import")
   public ResponseEntity<ApiResponse<Page<ImpBookingDto>>> getImportedEvents(
       @RequestParam(defaultValue = "0") int pageNumber) {
     log.info("[EventController.getImportedEvents] - Searching import events");
@@ -247,7 +248,7 @@ public class EventController {
     return ResponseEntity.ok().body(new ApiResponse<>(page));
   }
 
-  @PostMapping(value = "event/import/airbnb", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @PostMapping(value = "booking/import/airbnb", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<ApiResponse<List<ImpBookingDto>>> importAirbnbEvents(
       @RequestParam("file") MultipartFile multipartFile) {
     log.info("[EventController.importAirbnbEvents] - Importing Airbnb events");
@@ -275,7 +276,7 @@ public class EventController {
         .body(new ApiResponse<>(importedEvents.stream().map(ImpBookingDto::new).toList()));
   }
 
-  @PostMapping(value = "event/import/event", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @PostMapping(value = "booking/import/booking", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<ApiResponse<List<ImpBookingDto>>> importEventEvents(
       @RequestParam("file") MultipartFile multipartFile) {
     log.info("[EventController.importEventEvents] - Importing Event events");
@@ -302,7 +303,7 @@ public class EventController {
         .body(new ApiResponse<>(importedEvents.stream().map(ImpBookingDto::new).toList()));
   }
 
-  @PostMapping(value = "event/import/execute")
+  @PostMapping(value = "booking/import/execute")
   public ResponseEntity<ApiResponse<ImportResultDto>> executeImport() {
     log.info("[EventController.executeImport] - Executing event import");
     try {
@@ -322,7 +323,7 @@ public class EventController {
     }
   }
 
-  @DeleteMapping("/event/import")
+  @DeleteMapping("/booking/import")
   public ResponseEntity<Void> deleteUserImportData() {
     log.info("[EventController.deleteUserImportData] - Deleting user import data");
     importService.deleteUserImpBookings();
@@ -330,7 +331,7 @@ public class EventController {
     return ResponseEntity.ok().build();
   }
 
-  @DeleteMapping("/event/import/{id}")
+  @DeleteMapping("/booking/import/{id}")
   public ResponseEntity<Void> deleteImportedEvent(@PathVariable UUID id) {
     log.info("[EventController.deleteImportedEvent] - Deleting imported event with id: {}", id);
     importService.deleteImpBookingById(id);

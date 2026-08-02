@@ -21,7 +21,6 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
@@ -95,6 +94,7 @@ public class AssignmentService {
             .state(form.getState())
             .build();
     assignment = assignmentRepository.save(assignment);
+    event.getAssignments().add(assignment);
     workflowService.calculateApartmentState(task.getApartment().getId());
     return assignment;
   }
@@ -190,6 +190,15 @@ public class AssignmentService {
     return errors;
   }
 
+  public Assignment getAssignmentById(UUID id) throws EntityNotFoundException {
+    Optional<Assignment> result = assignmentRepository.findById(id, AuthUtils.getUsername());
+    if (result.isEmpty()) {
+      throw new EntityNotFoundException("Assignment not found with id: " + id);
+    } else {
+      return result.get();
+    }
+  }
+
   public List<Assignment> findAssignments(AssignmentSearchForm form) {
     String taskName =
         form.getTaskName() == null || form.getTaskName().isEmpty()
@@ -221,6 +230,7 @@ public class AssignmentService {
     assignmentProcessor.checkWhetherEventAssignmentsCanBeAltered(event);
     Apartment apartment = assignment.getTask().getApartment();
     assignmentRepository.delete(assignment);
+    event.getAssignments().remove(assignment);
     workflowService.calculateApartmentState(apartment.getId());
   }
 }

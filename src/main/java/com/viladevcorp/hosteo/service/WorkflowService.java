@@ -55,7 +55,7 @@ public class WorkflowService {
     Apartment apartment = apartmentOpt.get();
 
     // If the apartment has an event in progress, is occupied
-    if (eventRepository.existsEventByApartmentIdAndState(id, EventState.IN_PROGRESS.toString())) {
+    if (eventRepository.existsEventByApartmentIdAndState(id, EventState.IN_PROGRESS)) {
       apartment.setState(ApartmentState.OCCUPIED);
       apartmentRepository.save(apartment);
       return;
@@ -81,7 +81,7 @@ public class WorkflowService {
     // Get the last finished event of the apartment
     Optional<Event> lastFinishedEvent =
         eventRepository.findFirstByCreatedByUsernameAndApartmentIdAndStateOrderByEndDateDesc(
-            AuthUtils.getUsername(), id, EventState.FINISHED.toString());
+            AuthUtils.getUsername(), id, EventState.FINISHED);
 
     // If not finished event found, the apartment is ready
     if (lastFinishedEvent.isEmpty()) {
@@ -93,7 +93,9 @@ public class WorkflowService {
     // We loop through the assignments of that last finished event
     Set<Assignment> eventAssignments = lastFinishedEvent.get().getAssignments();
     for (Assignment assignment : eventAssignments) {
-      // If one of the assignments is not completed, the apartment is still USED
+      // If one of the assignments is not completed, the apartment is still USED (if the not
+      // completed is an optional task, we still have to set used, as optional tasks are mandatory
+      // when scheduled)
       if (assignment.getState().isPending()) {
         apartment.setState(ApartmentState.USED);
         apartmentRepository.save(apartment);
