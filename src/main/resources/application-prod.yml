@@ -1,43 +1,15 @@
 spring:
   datasource:
-    password: mypassword
+    password: hosteo123
     url: jdbc:postgresql://db:5432/hosteodb
     username: hosteo
-  jpa:
-    open-in-view: false
-    hibernate:
-      ddl-auto: update
-  session:
-    store-type: jdbc
-    jdbc:
-      initialize-schema: always
   mail:
-    host: smtp.gmail.com
-    port: 587
-    username: viladevapps@gmail.com
-    password: iabn dhoj wpyc zzwu
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-  jackson:
-    serialization:
-      write-dates-as-timestamps: false
+    password:
 cors:
-  allowed-origins: https://template.dviladev.com
-mail:
-  enabled: true
-  subject:
-    account-activation: Account Activation
-    password-reset: Password Reset
-  message:
-    account-activation: Click on the link below to activate your account
-    password-reset: Click on the link below to reset your password
+  allowed-origins: https://hosteo.dviladev.com
 auth:
   jwt:
-    secret: mysecret
+    secret: hosteosecret123
     expiration: 86400000
     issuer: fundshare
   cookie:
