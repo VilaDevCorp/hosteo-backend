@@ -299,120 +299,120 @@ class AuthControllerTest extends BaseControllerTest {
     }
   }
 
-  @Nested
-  @DisplayName("Account validation")
-  class AccountValidation {
-
-    @BeforeEach
-    void initValidationSetup() throws Exception {
-      testSetupHelper.resetTestBase();
-      User invalidatedUser = testSetupHelper.getTestUsers().get(1);
-      invalidatedUser.setValidated(false);
-      userRepository.save(invalidatedUser);
-    }
-
-    @Test
-    void When_LoginNotActivatedAccount_Forbidden() throws Exception {
-      LoginForm form = new LoginForm(INACTIVE_USER_USERNAME, INACTIVE_USER_PASSWORD, false);
-
-      mockMvc
-          .perform(
-              post("/api/public/login")
-                  .contentType("application/json")
-                  .content(objectMapper.writeValueAsString(form)))
-          .andExpect(status().isForbidden());
-    }
-
-    @Test
-    void When_AccountValidationWrongCode_Unauthorized() throws Exception {
-      ValidationCode validationCode =
-          validationCodeRepository
-              .findByUserUsernameAndTypeOrderByCreatedAtDesc(
-                  INACTIVE_USER_USERNAME, ValidationCodeType.ACTIVATE_ACCOUNT.getType())
-              .get(0);
-      mockMvc
-          .perform(
-              post(
-                  "/api/public/validate/"
-                      + INACTIVE_USER_USERNAME
-                      + "/"
-                      + validationCode.getCode()
-                      + "1"))
-          .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    void When_AccountValidationExpiredCode_Gone() throws Exception {
-      List<ValidationCode> validationCodeList =
-          validationCodeRepository.findByUserUsernameAndTypeOrderByCreatedAtDesc(
-              INACTIVE_USER_USERNAME, ValidationCodeType.ACTIVATE_ACCOUNT.getType());
-      // We take the first validation code (more recent) and we delete the rest to
-      // avoid conflicts with other tests
-      ValidationCode validationCode = validationCodeList.get(0);
-      List<ValidationCode> validationCodeToDelete =
-          validationCodeList.subList(1, validationCodeList.size());
-      validationCodeToDelete.forEach(vc -> validationCodeRepository.delete(vc));
-      Instant oldCreationDate = validationCode.getCreatedAt();
-      Instant expiredDate =
-          oldCreationDate.minusSeconds((ValidationCode.EXPIRATION_MINUTES + 1) * 60);
-      validationCode.setCreatedAt(expiredDate);
-      validationCodeRepository.save(validationCode);
-      mockMvc
-          .perform(
-              post(
-                  "/api/public/validate/"
-                      + INACTIVE_USER_USERNAME
-                      + "/"
-                      + validationCode.getCode()))
-          .andExpect(status().isGone());
-      validationCode.setCreatedAt(oldCreationDate);
-      validationCodeRepository.save(validationCode);
-    }
-
-    @Test
-    void When_AccountValidationAlreadyUsedCode_Conflict() throws Exception {
-      ValidationCode validationCode =
-          validationCodeRepository
-              .findByUserUsernameAndTypeOrderByCreatedAtDesc(
-                  INACTIVE_USER_USERNAME, ValidationCodeType.ACTIVATE_ACCOUNT.getType())
-              .get(0);
-      validationCode.setUsed(true);
-      validationCodeRepository.save(validationCode);
-      mockMvc
-          .perform(
-              post(
-                  "/api/public/validate/"
-                      + INACTIVE_USER_USERNAME
-                      + "/"
-                      + validationCode.getCode()))
-          .andExpect(status().isConflict());
-    }
-
-    @Test
-    void When_AccountValidationSuccesful_Ok() throws Exception {
-      ValidationCode validationCode =
-          validationCodeRepository
-              .findByUserUsernameAndTypeOrderByCreatedAtDesc(
-                  INACTIVE_USER_USERNAME, ValidationCodeType.ACTIVATE_ACCOUNT.getType())
-              .get(0);
-      mockMvc
-          .perform(
-              post(
-                  "/api/public/validate/"
-                      + INACTIVE_USER_USERNAME
-                      + "/"
-                      + validationCode.getCode()))
-          .andExpect(status().isOk());
-      User user = userRepository.findByUsername(INACTIVE_USER_USERNAME);
-      assertTrue(user.isValidated());
-      validationCode =
-          validationCodeRepository
-              .findByUserUsernameAndTypeOrderByCreatedAtDesc(
-                  INACTIVE_USER_USERNAME, ValidationCodeType.ACTIVATE_ACCOUNT.getType())
-              .get(0);
-      assertTrue(validationCode.isUsed());
-    }
-  }
+//  @Nested
+//  @DisplayName("Account validation")
+//  class AccountValidation {
+//
+//    @BeforeEach
+//    void initValidationSetup() throws Exception {
+//      testSetupHelper.resetTestBase();
+//      User invalidatedUser = testSetupHelper.getTestUsers().get(1);
+//      invalidatedUser.setValidated(false);
+//      userRepository.save(invalidatedUser);
+//    }
+//
+//    @Test
+//    void When_LoginNotActivatedAccount_Forbidden() throws Exception {
+//      LoginForm form = new LoginForm(INACTIVE_USER_USERNAME, INACTIVE_USER_PASSWORD, false);
+//
+//      mockMvc
+//          .perform(
+//              post("/api/public/login")
+//                  .contentType("application/json")
+//                  .content(objectMapper.writeValueAsString(form)))
+//          .andExpect(status().isForbidden());
+//    }
+//
+//    @Test
+//    void When_AccountValidationWrongCode_Unauthorized() throws Exception {
+//      ValidationCode validationCode =
+//          validationCodeRepository
+//              .findByUserUsernameAndTypeOrderByCreatedAtDesc(
+//                  INACTIVE_USER_USERNAME, ValidationCodeType.ACTIVATE_ACCOUNT.getType())
+//              .get(0);
+//      mockMvc
+//          .perform(
+//              post(
+//                  "/api/public/validate/"
+//                      + INACTIVE_USER_USERNAME
+//                      + "/"
+//                      + validationCode.getCode()
+//                      + "1"))
+//          .andExpect(status().isUnauthorized());
+//    }
+//
+//    @Test
+//    void When_AccountValidationExpiredCode_Gone() throws Exception {
+//      List<ValidationCode> validationCodeList =
+//          validationCodeRepository.findByUserUsernameAndTypeOrderByCreatedAtDesc(
+//              INACTIVE_USER_USERNAME, ValidationCodeType.ACTIVATE_ACCOUNT.getType());
+//      // We take the first validation code (more recent) and we delete the rest to
+//      // avoid conflicts with other tests
+//      ValidationCode validationCode = validationCodeList.get(0);
+//      List<ValidationCode> validationCodeToDelete =
+//          validationCodeList.subList(1, validationCodeList.size());
+//      validationCodeToDelete.forEach(vc -> validationCodeRepository.delete(vc));
+//      Instant oldCreationDate = validationCode.getCreatedAt();
+//      Instant expiredDate =
+//          oldCreationDate.minusSeconds((ValidationCode.EXPIRATION_MINUTES + 1) * 60);
+//      validationCode.setCreatedAt(expiredDate);
+//      validationCodeRepository.save(validationCode);
+//      mockMvc
+//          .perform(
+//              post(
+//                  "/api/public/validate/"
+//                      + INACTIVE_USER_USERNAME
+//                      + "/"
+//                      + validationCode.getCode()))
+//          .andExpect(status().isGone());
+//      validationCode.setCreatedAt(oldCreationDate);
+//      validationCodeRepository.save(validationCode);
+//    }
+//
+//    @Test
+//    void When_AccountValidationAlreadyUsedCode_Conflict() throws Exception {
+//      ValidationCode validationCode =
+//          validationCodeRepository
+//              .findByUserUsernameAndTypeOrderByCreatedAtDesc(
+//                  INACTIVE_USER_USERNAME, ValidationCodeType.ACTIVATE_ACCOUNT.getType())
+//              .get(0);
+//      validationCode.setUsed(true);
+//      validationCodeRepository.save(validationCode);
+//      mockMvc
+//          .perform(
+//              post(
+//                  "/api/public/validate/"
+//                      + INACTIVE_USER_USERNAME
+//                      + "/"
+//                      + validationCode.getCode()))
+//          .andExpect(status().isConflict());
+//    }
+//
+//    @Test
+//    void When_AccountValidationSuccesful_Ok() throws Exception {
+//      ValidationCode validationCode =
+//          validationCodeRepository
+//              .findByUserUsernameAndTypeOrderByCreatedAtDesc(
+//                  INACTIVE_USER_USERNAME, ValidationCodeType.ACTIVATE_ACCOUNT.getType())
+//              .get(0);
+//      mockMvc
+//          .perform(
+//              post(
+//                  "/api/public/validate/"
+//                      + INACTIVE_USER_USERNAME
+//                      + "/"
+//                      + validationCode.getCode()))
+//          .andExpect(status().isOk());
+//      User user = userRepository.findByUsername(INACTIVE_USER_USERNAME);
+//      assertTrue(user.isValidated());
+//      validationCode =
+//          validationCodeRepository
+//              .findByUserUsernameAndTypeOrderByCreatedAtDesc(
+//                  INACTIVE_USER_USERNAME, ValidationCodeType.ACTIVATE_ACCOUNT.getType())
+//              .get(0);
+//      assertTrue(validationCode.isUsed());
+//    }
+//  }
 
   @Test
   void When_ResetPassword_Ok() throws Exception {

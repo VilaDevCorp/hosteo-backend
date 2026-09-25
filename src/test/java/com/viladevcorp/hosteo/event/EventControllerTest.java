@@ -226,6 +226,7 @@ class EventControllerTest extends BaseControllerTest {
       form.setEndDate(endDate);
       form.setState(UPDATED_EVENT_STATE);
       form.setSource(UPDATED_EVENT_SOURCE);
+      form.setType(UPDATED_EVENT_TYPE);
 
       mockMvc
           .perform(
@@ -262,6 +263,7 @@ class EventControllerTest extends BaseControllerTest {
 
       form.setState(UPDATED_EVENT_STATE);
       form.setSource(UPDATED_EVENT_SOURCE);
+      form.setType(UPDATED_EVENT_TYPE);
 
       mockMvc
           .perform(
@@ -286,6 +288,7 @@ class EventControllerTest extends BaseControllerTest {
 
       form.setState(UPDATED_EVENT_STATE);
       form.setSource(UPDATED_EVENT_SOURCE);
+      form.setType(UPDATED_EVENT_TYPE);
 
       String resultString =
           mockMvc
