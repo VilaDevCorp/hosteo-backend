@@ -144,18 +144,18 @@
        ApiResponse<SchedulerInfo> result = objectMapper.readValue(resultString, typeReference);
 
        SchedulerInfo info = result.getData();
-       assertEquals(1, info.getRedAlertBookings().size());
-       assertEquals(1, info.getYellowAlertBookings().size());
+       assertEquals(1, info.getRedAlertEvents().size());
+       assertEquals(1, info.getYellowAlertEvents().size());
 
        // Verify red alert: the 1-day event should have DAYS_LEFT_2_UNASSIGNED
-       UUID redAlertEventId = info.getRedAlertBookings().get(0);
+       UUID redAlertEventId = info.getRedAlertEvents().get(0);
        EventSchedulerDto redAlertEvent = info.getEventInfo().get(redAlertEventId);
        assertEquals(eventIn1Days.getId(), redAlertEvent.getId());
        assertEquals(eventIn1DaysName, redAlertEvent.getName());
        assertEquals(Alert.DAYS_LEFT_2_UNASSIGNED, redAlertEvent.getAlert());
 
        // Verify yellow alert: the 3-day event should have DAYS_LEFT_5_UNASSIGNED
-       UUID yellowAlertEventId = info.getYellowAlertBookings().get(0);
+       UUID yellowAlertEventId = info.getYellowAlertEvents().get(0);
        EventSchedulerDto yellowAlertEvent = info.getEventInfo().get(yellowAlertEventId);
        assertEquals(eventIn3Days.getId(), yellowAlertEvent.getId());
        assertEquals(eventIn3DaysName, yellowAlertEvent.getName());

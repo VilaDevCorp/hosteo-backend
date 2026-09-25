@@ -8,6 +8,7 @@ import com.viladevcorp.hosteo.model.types.EventState;
 import java.time.Instant;
 import java.util.*;
 
+import com.viladevcorp.hosteo.model.types.EventType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -49,6 +50,8 @@ public class EventWithAssignmentsDto extends BaseEntityDto {
   private EventState state;
 
   private EventSource source;
+
+  private EventType type;
 
   private List<AssignmentDto> assignments = new ArrayList<>();
 }

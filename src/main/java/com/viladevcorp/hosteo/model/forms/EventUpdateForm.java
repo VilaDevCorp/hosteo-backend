@@ -23,4 +23,6 @@ public class EventUpdateForm {
   private EventSource source;
 
   @NotNull private EventState state;
+
+  @NotNull private EventType type;
 }

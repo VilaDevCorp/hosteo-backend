@@ -5,17 +5,11 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.viladevcorp.hosteo.model.dto.BaseEntityDto;
+import jakarta.persistence.*;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MappedSuperclass;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -35,7 +29,9 @@ public abstract class BaseEntity {
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
-  @CreatedDate private Instant createdAt;
+  @CreatedDate
+  @Column(updatable = false)
+  private Instant createdAt;
 
   @ManyToOne
   @JoinColumn(name = "createdBy")
@@ -60,7 +56,7 @@ public abstract class BaseEntity {
   }
 
   public BaseEntityDto toDto() {
-        throw new UnsupportedOperationException(
+    throw new UnsupportedOperationException(
         "toDto() is not implemented for " + this.getClass().getName());
   }
 }

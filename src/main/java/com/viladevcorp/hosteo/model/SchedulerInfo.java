@@ -21,13 +21,13 @@ public class SchedulerInfo {
   private Map<UUID, UUID> previousEvent = new HashMap<>();
 
   /** Calendar range: event IDs to render in the scheduler grid. */
-  private List<UUID> bookings = new ArrayList<>();
+  private List<UUID> events = new ArrayList<>();
 
   /** Sidebar red alerts: upcoming event IDs that have urgent (2-day) deadline pressure. */
-  private List<UUID> redAlertBookings = new ArrayList<>();
+  private List<UUID> redAlertEvents = new ArrayList<>();
 
   /** Sidebar yellow alerts: upcoming event IDs that have warning (5-day) deadline pressure. */
-  private List<UUID> yellowAlertBookings = new ArrayList<>();
+  private List<UUID> yellowAlertEvents = new ArrayList<>();
 
   private Set<AssignmentDto> assignments = new HashSet<>();
 }

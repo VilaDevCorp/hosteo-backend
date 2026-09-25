@@ -30,9 +30,9 @@ public class Worker extends BaseEntity {
   @NotBlank
   @Column(nullable = false, unique = true)
   private String name;
-  
+
   @Enumerated(EnumType.STRING)
-  private Language language;
+  private Language language = Language.EN;
 
   private double salary;
 

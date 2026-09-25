@@ -27,7 +27,6 @@ public class WorkflowService {
   private final ApartmentRepository apartmentRepository;
   private final EventRepository eventRepository;
   private final AssignmentRepository assignmentRepository;
-  private final TaskRepository taskRepository;
   private final Clock clock;
 
   @Autowired
@@ -40,7 +39,6 @@ public class WorkflowService {
     this.apartmentRepository = apartmentRepository;
     this.eventRepository = eventRepository;
     this.assignmentRepository = assignmentRepository;
-    this.taskRepository = taskRepository;
     this.clock = clock;
   }
 
@@ -120,7 +118,8 @@ public class WorkflowService {
     Event nextPendingEvent;
     ApartmentState state;
 
-    public ApartmentInfo(List<TaskDto> mandatoryTasks, Event nextPendingEvent, ApartmentState state) {
+    public ApartmentInfo(
+        List<TaskDto> mandatoryTasks, Event nextPendingEvent, ApartmentState state) {
       this.mandatoryTasks = mandatoryTasks;
       this.nextPendingEvent = nextPendingEvent;
       this.state = state;
@@ -158,9 +157,7 @@ public class WorkflowService {
    * {@code previousEvent} map in {@link SchedulerInfo}.
    */
   private EventSchedulerDto processEventForScheduler(
-      Event event,
-      Map<UUID, ApartmentInfo> apartmentInfoMap,
-      Map<UUID, EventSchedulerDto> eventMap)
+      Event event, Map<UUID, ApartmentInfo> apartmentInfoMap, Map<UUID, EventSchedulerDto> eventMap)
       throws EntityNotFoundException {
     if (event == null) {
       return null;
@@ -228,7 +225,7 @@ public class WorkflowService {
     // Process events on range to get scheduler info — store IDs only
     for (Event event : eventsOnRange) {
       EventSchedulerDto dto = processEventForScheduler(event, apartmentInfoMap, eventMap);
-      schedulerInfo.getBookings().add(dto.getId());
+      schedulerInfo.getEvents().add(dto.getId());
     }
 
     // Now we get the pending events until 5 days from now to check for alerts
@@ -315,12 +312,12 @@ public class WorkflowService {
         if (currentEvent.getStartDate().isBefore(RED_FLAG_LIMIT)) {
           if (!previousEventSched.getMandatoryUnassignedTasks().isEmpty()) {
             currentEventSched.setAlert(Alert.DAYS_LEFT_2_UNASSIGNED);
-            schedulerInfo.getRedAlertBookings().add(currentEventSched.getId());
+            schedulerInfo.getRedAlertEvents().add(currentEventSched.getId());
             continue;
           }
           if (hasUnfinishedTasks(previousEventSched)) {
             currentEventSched.setAlert(Alert.DAYS_LEFT_2_NOT_COMPLETED);
-            schedulerInfo.getRedAlertBookings().add(currentEventSched.getId());
+            schedulerInfo.getRedAlertEvents().add(currentEventSched.getId());
             continue;
           }
         }
@@ -329,7 +326,7 @@ public class WorkflowService {
         if (currentEvent.getStartDate().isBefore(YELLOW_FLAG_LIMIT)) {
           if (!previousEventSched.getMandatoryUnassignedTasks().isEmpty()) {
             currentEventSched.setAlert(Alert.DAYS_LEFT_5_UNASSIGNED);
-            schedulerInfo.getYellowAlertBookings().add(currentEventSched.getId());
+            schedulerInfo.getYellowAlertEvents().add(currentEventSched.getId());
           }
         }
       }
@@ -351,7 +348,6 @@ public class WorkflowService {
 
   /** Checks whether the event scheduler DTO has any unfinished (pending) assignments. */
   private boolean hasUnfinishedTasks(EventSchedulerDto dto) {
-    return dto.getUncompletedAssignments() != null
-        && !dto.getUncompletedAssignments().isEmpty();
+    return dto.getUncompletedAssignments() != null && !dto.getUncompletedAssignments().isEmpty();
   }
 }
