@@ -33,24 +33,23 @@ jobs:
           cache: "maven"
       - name: Test application
         run: mvn -B test
-  # deploy:
-  #   needs: [test]
-  #   runs-on: ubuntu-latest
-  #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-  #   steps:
-  #     - name: Deploy to Contabo server
-  #       uses: appleboy/ssh-action@v1.0.3
-  #       with:
-  #         host: ${{ secrets.CONTABO_HOST }}
-  #         username: ${{ secrets.CONTABO_USERNAME }}
-  #         password: ${{ secrets.CONTABO_PASSWORD }}
-  #         port: 22
-  #         script: |
-  #           cd services/hosteo-backend
-  #           git checkout main
-  #           ${{ secrets.GIT_PULL_COMMAND }}
-  #           mvn package -B -DskipTests
-  #           docker build -t template-backend .
-  #           docker build -t template-backend-e2e  -f DockerfilePre .
-  #           docker-compose -f docker-compose-prod.yml up -d
+  deploy:
+    needs: [ test ]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Deploy to Contabo server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.CONTABO_HOST }}
+          username: ${{ secrets.CONTABO_USERNAME }}
+          password: ${{ secrets.CONTABO_PASSWORD }}
+          port: 22
+          script: |
+            cd services/hosteo-backend
+            git checkout main
+            ${{ secrets.GIT_PULL_COMMAND }}
+            mvn package -B -DskipTests
+            docker build -t hosteo-backend .
+            docker-compose -f docker-compose-prod.yml up -d
 #git pull https://davilasanvilar:{TOKEN}@github.com/davilasanvilar/fundshare-backend.git

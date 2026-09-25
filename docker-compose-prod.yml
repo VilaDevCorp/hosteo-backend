@@ -3,7 +3,7 @@ services:
     image: "postgres:16-alpine"
     environment:
       - "POSTGRES_DB=hosteodb"
-      - "POSTGRES_PASSWORD=hosteo123"
+      - "POSTGRES_PASSWORD=${DB_PASS}"
       - "POSTGRES_USER=hosteo"
     volumes:
       - db:/var/lib/postgresql/data
