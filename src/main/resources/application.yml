@@ -4,7 +4,7 @@ spring:
     url: jdbc:postgresql://localhost:5436/database
     username: user
   application:
-    name: hosteoapi
+    name: hosteo
   jpa:
     open-in-view: false
     hibernate:
@@ -48,7 +48,7 @@ auth:
   jwt:
     secret: mysecret
     expiration: 86400000
-    issuer: hosteoapi
+    issuer: hosteo
   cookie:
     domain: 192.168.1.33
     path: /

@@ -11,9 +11,9 @@
     </parent>
     <packaging>jar</packaging>
     <groupId>com.viladevcorp.hosteo</groupId>
-    <artifactId>hosteoapi</artifactId>
+    <artifactId>hosteo</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>hosteoapi</name>
+    <name>hosteo</name>
     <description>Hosteo API</description>
     <properties>
         <java.version>17</java.version>
