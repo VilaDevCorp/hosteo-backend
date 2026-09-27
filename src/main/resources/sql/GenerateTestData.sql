@@ -10,7 +10,7 @@ DECLARE
     -- ---------------------------------
     -- CONFIGURATION VARIABLES
     -- ---------------------------------
-    base_date date := '2026-04-02';
+    base_date date := '2026-09-27';
     user_id uuid := '06c7ab9a-f1da-4d5b-8d39-fc81fe3c0f0e';
 
     -- ---------------------------------

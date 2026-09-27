@@ -21,6 +21,7 @@ public class EventSchedulerDto extends BaseEntityDto {
     if (event == null) {
       return;
     }
+    this.apartmentName = event.getApartment().getName();
     BeanUtils.copyProperties(event, this);
   }
 
@@ -33,6 +34,8 @@ public class EventSchedulerDto extends BaseEntityDto {
   private Instant endDate;
 
   private String name;
+
+  private String apartmentName;
 
   private EventSource source;
 

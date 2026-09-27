@@ -127,4 +127,8 @@ public interface EventRepository extends EntityRepository<Event> {
   @EntityGraph(attributePaths = {"assignments"})
   Optional<Event> findFirstByCreatedByUsernameAndApartmentIdAndStateOrderByEndDateDesc(
       String username, UUID apartmentId, EventState state);
+
+  @EntityGraph(attributePaths = {"assignments"})
+  Optional<Event> findFirstByCreatedByUsernameAndApartmentIdAndStateOrderByStartDateAsc(
+      String username, UUID apartmentId, EventState state);
 }

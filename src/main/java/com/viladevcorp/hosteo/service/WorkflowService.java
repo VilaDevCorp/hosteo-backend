@@ -139,7 +139,7 @@ public class WorkflowService {
       // We get the next pending event of the apartment
       Event nextPendingEvent =
           eventRepository
-              .findFirstByCreatedByUsernameAndApartmentIdAndStateOrderByEndDateDesc(
+              .findFirstByCreatedByUsernameAndApartmentIdAndStateOrderByStartDateAsc(
                   AuthUtils.getUsername(), apartmentId, EventState.PENDING)
               .orElse(null);
       ApartmentInfo aptInfo =
@@ -260,10 +260,11 @@ public class WorkflowService {
         Event currentEvent = aptEvents.get(i);
 
         // Get or create candidate DTO (may already exist from range processing)
-        EventSchedulerDto currentEventSched = eventMap.get(currentEvent.getId());
-        if (currentEventSched == null) {
-          currentEventSched = new EventSchedulerDto(currentEvent);
-          eventMap.put(currentEvent.getId(), currentEventSched);
+        EventSchedulerDto currentEventSched =
+            processEventForScheduler(currentEvent, apartmentInfoMap, eventMap);
+        // Mark overdue if the event start date is in the past
+        if (currentEvent.getStartDate().isBefore(Instant.now(clock))) {
+          currentEventSched.setOverdue(true);
         }
 
         // If the apartment is ready and this is the next pending event, skip alert
@@ -302,11 +303,6 @@ public class WorkflowService {
         // Process the predecessor (cached in eventMap) — this is what alert logic inspects
         EventSchedulerDto previousEventSched =
             processEventForScheduler(predecessor, apartmentInfoMap, eventMap);
-
-        // Mark overdue if the event start date is in the past
-        if (currentEvent.getStartDate().isBefore(Instant.now(clock))) {
-          currentEventSched.setOverdue(true);
-        }
 
         // Red alert: event starts within 2 days
         if (currentEvent.getStartDate().isBefore(RED_FLAG_LIMIT)) {
