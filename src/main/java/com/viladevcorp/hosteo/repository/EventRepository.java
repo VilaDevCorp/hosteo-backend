@@ -27,6 +27,7 @@ public interface EventRepository extends EntityRepository<Event> {
               + "AND (:types IS NULL OR b.type IN :types) "
               + "AND (CAST(:startDate AS TIMESTAMP) IS NULL OR b.endDate >= :startDate) "
               + "AND (CAST(:endDate AS TIMESTAMP) IS NULL OR b.startDate < :endDate) "
+              + "AND (:frozen IS NULL OR b.apartment.visible <> :frozen) "
               + "ORDER BY b.startDate DESC")
   List<Event> advancedSearch(
       @Param("username") String username,
@@ -35,6 +36,7 @@ public interface EventRepository extends EntityRepository<Event> {
       @Param("types") Set<String> types,
       @Param("startDate") Instant startDate,
       @Param("endDate") Instant endDate,
+      @Param("frozen") Boolean frozen,
       Pageable pageable);
 
   @Query(
@@ -45,14 +47,16 @@ public interface EventRepository extends EntityRepository<Event> {
               + "AND (:states IS NULL OR b.state IN :states) "
               + "AND (:types IS NULL OR b.type IN :types) "
               + "AND (CAST(:startDate AS TIMESTAMP) IS NULL OR b.endDate >= :startDate) "
-              + "AND (CAST(:endDate AS TIMESTAMP) IS NULL OR b.startDate < :endDate) ")
+              + "AND (CAST(:endDate AS TIMESTAMP) IS NULL OR b.startDate < :endDate) "
+              + "AND (:frozen IS NULL OR b.apartment.visible <> :frozen) ")
   int advancedCount(
       @Param("username") String username,
       @Param("apartmentName") String apartmentName,
       @Param("states") Set<String> states,
       @Param("types") Set<String> types,
       @Param("startDate") Instant startDate,
-      @Param("endDate") Instant endDate);
+      @Param("endDate") Instant endDate,
+      @Param("frozen") Boolean frozen);
 
   @Query(
       value =

@@ -17,6 +17,14 @@ public class EventSearchForm {
   private Set<String> states;
   private Instant startDate;
   private Instant endDate;
+
+  /**
+   * Filters events by whether they are frozen (their apartment is hidden).
+   * {@code null} = all events, {@code true} = only frozen events,
+   * {@code false} = only non-frozen events.
+   */
+  private Boolean frozen;
+
   private int pageNumber = -1;
   private int pageSize;
 }

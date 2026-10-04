@@ -265,6 +265,7 @@ public class WorkflowService {
             null,
             null,
             Instant.now(clock).plusSeconds(5 * 24 * 3600),
+            Boolean.FALSE,
             Pageable.unpaged());
 
     // Group candidate events by apartment

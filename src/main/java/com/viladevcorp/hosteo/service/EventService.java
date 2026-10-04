@@ -212,6 +212,7 @@ public class EventService {
         form.getTypes(),
         form.getStartDate(),
         form.getEndDate(),
+        form.getFrozen(),
         pageRequest);
   }
 
@@ -227,7 +228,8 @@ public class EventService {
             form.getStates(),
             form.getTypes(),
             form.getStartDate(),
-            form.getEndDate());
+            form.getEndDate(),
+            form.getFrozen());
     int totalPages = ServiceUtils.calculateTotalPages(form.getPageSize(), totalRows);
     return new PageMetadata(totalPages, totalRows);
   }

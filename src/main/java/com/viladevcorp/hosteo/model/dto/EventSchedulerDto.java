@@ -23,6 +23,7 @@ public class EventSchedulerDto extends BaseEntityDto {
       return;
     }
     this.apartmentName = event.getApartment().getName();
+    this.frozen = !event.getApartment().isVisible();
     BeanUtils.copyProperties(event, this);
   }
 
@@ -52,4 +53,7 @@ public class EventSchedulerDto extends BaseEntityDto {
   private Alert alert;
 
   private boolean overdue;
+
+  /** True when the event belongs to a hidden apartment and must be treated as read-only. */
+  private boolean frozen;
 }
