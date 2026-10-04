@@ -178,10 +178,12 @@ public class EventController {
   }
 
   @GetMapping("/event/{id}")
-  public ResponseEntity<ApiResponse<EventWithAssignmentsDto>> getEvent(@PathVariable UUID id) {
+  public ResponseEntity<ApiResponse<EventWithAssignmentsAndNextEventDto>> getEvent(
+      @PathVariable UUID id) {
     log.info("[EventController.getEvent] - Fetching event with id: {}", id);
     try {
-      EventWithAssignmentsDto event = eventService.getEventByIdWithAssigments(id);
+      EventWithAssignmentsAndNextEventDto event =
+          eventService.getEventByIdWithAssigmentsAndNextEvent(id);
       log.info("[EventController.getEvent] - Event found successfully");
       return ResponseEntity.ok().body(new ApiResponse<>(event));
     } catch (EntityNotFoundException e) {

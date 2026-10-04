@@ -6,6 +6,7 @@ import com.viladevcorp.hosteo.model.Page;
 import com.viladevcorp.hosteo.model.PageMetadata;
 import com.viladevcorp.hosteo.model.dto.AssignmentDto;
 import com.viladevcorp.hosteo.model.dto.AssignmentUpdateError;
+import com.viladevcorp.hosteo.model.dto.AssignmentWithNextEventDto;
 import com.viladevcorp.hosteo.model.forms.AssignmentCreateForm;
 import com.viladevcorp.hosteo.model.forms.AssignmentSearchForm;
 import com.viladevcorp.hosteo.model.forms.AssignmentUpdateForm;
@@ -146,10 +147,21 @@ public class AssignmentController {
   }
 
   @GetMapping("/assignment/{id}")
-  public ResponseEntity<ApiResponse<AssignmentDto>> getAssignment(@PathVariable UUID id) {
+  public ResponseEntity<ApiResponse<AssignmentWithNextEventDto>> getAssignment(
+      @PathVariable UUID id) {
     log.info("[AssignmentController.getAssignment] - Fetching assignment with id: {}", id);
-
-    return handleAssignmentOperation(() -> assignmentService.getAssignmentById(id));
+    try {
+      return ResponseEntity.ok()
+          .body(new ApiResponse<>(assignmentService.getAssignmentByIdWithNextEvent(id)));
+    } catch (EntityNotFoundException e) {
+      log.error("[AssignmentController] - EntityNotFoundException: {}", e.getMessage());
+      return ResponseEntity.status(HttpStatus.NOT_FOUND)
+          .body(new ApiResponse<>(null, e.getMessage()));
+    } catch (Exception e) {
+      log.error("[AssignmentController] - An unexpected error occurred: {}", e.getMessage(), e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(new ApiResponse<>(null, "An unexpected error occurred."));
+    }
   }
 
   @PostMapping("/assignment/search")

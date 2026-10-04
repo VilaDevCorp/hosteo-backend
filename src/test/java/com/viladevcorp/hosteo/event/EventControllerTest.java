@@ -26,7 +26,7 @@ import com.viladevcorp.hosteo.common.BaseControllerTest;
 import com.viladevcorp.hosteo.common.TestSetupHelper;
 import com.viladevcorp.hosteo.common.TestUtils;
 import com.viladevcorp.hosteo.model.Event;
-import com.viladevcorp.hosteo.model.dto.EventWithAssignmentsDto;
+import com.viladevcorp.hosteo.model.dto.EventWithAssignmentsAndNextEventDto;
 import com.viladevcorp.hosteo.model.dto.EventDto;
 import com.viladevcorp.hosteo.model.Page;
 import com.viladevcorp.hosteo.model.forms.EventCreateForm;
@@ -323,10 +323,11 @@ class EventControllerTest extends BaseControllerTest {
               .getResponse()
               .getContentAsString();
 
-      TypeReference<ApiResponse<EventWithAssignmentsDto>> typeReference = new TypeReference<>() {};
-      ApiResponse<EventWithAssignmentsDto> result =
+      TypeReference<ApiResponse<EventWithAssignmentsAndNextEventDto>> typeReference =
+          new TypeReference<>() {};
+      ApiResponse<EventWithAssignmentsAndNextEventDto> result =
           objectMapper.readValue(resultString, typeReference);
-      EventWithAssignmentsDto returnedEvent = result.getData();
+      EventWithAssignmentsAndNextEventDto returnedEvent = result.getData();
 
       assertNotNull(returnedEvent);
       assertEquals(CREATED_EVENT_NAME_1, returnedEvent.getName());

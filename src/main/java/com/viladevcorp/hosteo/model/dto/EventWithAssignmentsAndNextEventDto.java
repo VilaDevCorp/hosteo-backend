@@ -17,9 +17,9 @@ import org.springframework.beans.BeanUtils;
 @Getter
 @Setter
 @NoArgsConstructor
-public class EventWithAssignmentsDto extends BaseEntityDto {
+public class EventWithAssignmentsAndNextEventDto extends BaseEntityDto {
 
-  public EventWithAssignmentsDto(Event event) {
+  public EventWithAssignmentsAndNextEventDto(Event event) {
     if (event == null) {
       return;
     }
@@ -54,4 +54,6 @@ public class EventWithAssignmentsDto extends BaseEntityDto {
   private EventType type;
 
   private List<AssignmentDto> assignments = new ArrayList<>();
+
+  private EventDto nextEvent;
 }

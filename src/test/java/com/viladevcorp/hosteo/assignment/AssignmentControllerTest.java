@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import com.viladevcorp.hosteo.model.*;
@@ -26,6 +27,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.viladevcorp.hosteo.common.BaseControllerTest;
 import com.viladevcorp.hosteo.common.TestUtils;
 import com.viladevcorp.hosteo.model.dto.AssignmentDto;
+import com.viladevcorp.hosteo.model.dto.AssignmentUpdateError;
 import com.viladevcorp.hosteo.model.types.AssignmentState;
 import com.viladevcorp.hosteo.utils.ApiResponse;
 import com.viladevcorp.hosteo.utils.CodeErrors;
@@ -673,6 +675,46 @@ class AssignmentControllerTest extends BaseControllerTest {
                   .contentType("application/json")
                   .content(objectMapper.writeValueAsString(form)))
           .andExpect(status().isNotFound());
+    }
+  }
+
+  @Nested
+  @DisplayName("Bulk update assignments state")
+  class BulkUpdateAssignmentsState {
+
+    @Test
+    void When_BulkUpdateAssignmentStateOnNotFinishedEvent_ErrorAndStateUnchanged()
+        throws Exception {
+      TestUtils.injectUserSession(ACTIVE_USER_USERNAME_1, userRepository);
+      Assignment assignmentToUpdate = testSetupHelper.getTestAssignments().get(2);
+      AssignmentState originalState = assignmentToUpdate.getState();
+      assertNotEquals(AssignmentState.FINISHED, originalState);
+
+      String resultString =
+          mockMvc
+              .perform(
+                  patch("/api/assignments/state/" + AssignmentState.FINISHED)
+                      .contentType("application/json")
+                      .content(
+                          objectMapper.writeValueAsString(Set.of(assignmentToUpdate.getId()))))
+              .andExpect(status().isOk())
+              .andReturn()
+              .getResponse()
+              .getContentAsString();
+
+      TypeReference<ApiResponse<List<AssignmentUpdateError>>> typeReference =
+          new TypeReference<>() {};
+      ApiResponse<List<AssignmentUpdateError>> result =
+          objectMapper.readValue(resultString, typeReference);
+      assertNotNull(result.getData());
+      assertEquals(1, result.getData().size());
+      assertEquals(
+          CodeErrors.COMPLETE_TASK_ON_NOT_FINISHED_EVENT, result.getData().get(0).getError());
+
+      Assignment persisted =
+          assignmentRepository.findById(assignmentToUpdate.getId()).orElse(null);
+      assertNotNull(persisted);
+      assertEquals(originalState, persisted.getState());
     }
   }
 

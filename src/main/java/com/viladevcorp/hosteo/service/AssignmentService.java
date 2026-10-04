@@ -3,10 +3,13 @@ package com.viladevcorp.hosteo.service;
 import com.viladevcorp.hosteo.exceptions.*;
 import com.viladevcorp.hosteo.model.*;
 import com.viladevcorp.hosteo.model.dto.AssignmentUpdateError;
+import com.viladevcorp.hosteo.model.dto.AssignmentWithNextEventDto;
+import com.viladevcorp.hosteo.model.dto.EventDto;
 import com.viladevcorp.hosteo.model.forms.AssignmentCreateForm;
 import com.viladevcorp.hosteo.model.forms.AssignmentSearchForm;
 import com.viladevcorp.hosteo.model.forms.AssignmentUpdateForm;
 import com.viladevcorp.hosteo.model.types.AssignmentState;
+import com.viladevcorp.hosteo.model.types.EventState;
 import com.viladevcorp.hosteo.repository.AssignmentRepository;
 import com.viladevcorp.hosteo.repository.EventRepository;
 import com.viladevcorp.hosteo.repository.TaskRepository;
@@ -20,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.expression.spel.ast.Assign;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -196,6 +200,26 @@ public class AssignmentService {
       throw new EntityNotFoundException("Assignment not found with id: " + id);
     } else {
       return result.get();
+    }
+  }
+
+  public AssignmentWithNextEventDto getAssignmentByIdWithNextEvent(UUID id)
+      throws EntityNotFoundException {
+    Optional<Assignment> result = assignmentRepository.findById(id, AuthUtils.getUsername());
+    if (result.isEmpty()) {
+      throw new EntityNotFoundException("Assignment not found with id: " + id);
+    } else {
+      Assignment assignment = result.get();
+      Event event = assignment.getEvent();
+      Event nextEvent =
+          eventRepository
+              .findFirstEventAfterDateWithState(
+                  AuthUtils.getAuthUser().getId(),
+                  event.getApartment().getId(),
+                  event.getEndDate(),
+                  null)
+              .orElse(null);
+      return new AssignmentWithNextEventDto(assignment, new EventDto(nextEvent));
     }
   }
 

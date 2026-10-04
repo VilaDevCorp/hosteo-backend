@@ -2,8 +2,9 @@ package com.viladevcorp.hosteo.service;
 
 import com.viladevcorp.hosteo.exceptions.*;
 import com.viladevcorp.hosteo.model.*;
+import com.viladevcorp.hosteo.model.dto.EventDto;
 import com.viladevcorp.hosteo.model.dto.EventUpdateError;
-import com.viladevcorp.hosteo.model.dto.EventWithAssignmentsDto;
+import com.viladevcorp.hosteo.model.dto.EventWithAssignmentsAndNextEventDto;
 import com.viladevcorp.hosteo.model.forms.EventCreateForm;
 import com.viladevcorp.hosteo.model.forms.EventSearchForm;
 import com.viladevcorp.hosteo.model.forms.EventUpdateForm;
@@ -153,14 +154,24 @@ public class EventService {
     }
   }
 
-  public EventWithAssignmentsDto getEventByIdWithAssigments(UUID id)
+  public EventWithAssignmentsAndNextEventDto getEventByIdWithAssigmentsAndNextEvent(UUID id)
       throws EntityNotFoundException {
     Optional<Event> resultOpt =
         eventRepository.findEventByIdWithAssignments(id, AuthUtils.getUsername());
     if (resultOpt.isEmpty()) {
       throw new EntityNotFoundException("Event not found with id: " + id);
     }
-    return new EventWithAssignmentsDto(resultOpt.get());
+    Event event = resultOpt.get();
+    EventWithAssignmentsAndNextEventDto dto = new EventWithAssignmentsAndNextEventDto(event);
+    // Attach the start date of the next event (used by the frontend as the assignment limit).
+    eventRepository
+        .findFirstEventAfterDateWithState(
+            AuthUtils.getAuthUser().getId(),
+            event.getApartment().getId(),
+            event.getStartDate(),
+            null)
+        .ifPresent(nextEvent -> dto.setNextEvent(new EventDto(nextEvent)));
+    return dto;
   }
 
   public List<Event> findEvents(EventSearchForm form) {

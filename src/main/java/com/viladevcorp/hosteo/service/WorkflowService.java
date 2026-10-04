@@ -163,7 +163,7 @@ public class WorkflowService {
       return null;
     }
     // If the event has already been processed, we return the cached info
-    if (eventMap.containsKey(event.getId())) {
+    if (eventMap != null && eventMap.containsKey(event.getId())) {
       return eventMap.get(event.getId());
     }
 
@@ -205,7 +205,9 @@ public class WorkflowService {
     eventDto.setNCompletedAssignments(nCompletedAssignments);
     eventDto.setUncompletedAssignments(uncompletedAssignments);
 
-    eventMap.put(event.getId(), eventDto);
+    if (eventMap != null) {
+      eventMap.put(event.getId(), eventDto);
+    }
     return eventDto;
   }
 
@@ -219,16 +221,34 @@ public class WorkflowService {
 
     // Cached info about processed apartments
     Map<UUID, ApartmentInfo> apartmentInfoMap = new HashMap<>();
-    // Central normalized map: all processed event data, keyed by event ID
-    Map<UUID, EventSchedulerDto> eventMap = new HashMap<>();
-
+    Set<EventSchedulerDto> processedEvents = new HashSet<>();
     // Process events on range to get scheduler info — store IDs only
     for (Event event : eventsOnRange) {
-      EventSchedulerDto dto = processEventForScheduler(event, apartmentInfoMap, eventMap);
-      schedulerInfo.getEvents().add(dto.getId());
+      processedEvents.add(processEventForScheduler(event, apartmentInfoMap, null));
     }
+    schedulerInfo.setEvents(processedEvents);
+    // Map assignments in range to DTOs (event is already JOIN FETCHed)
+    schedulerInfo.setAssignments(
+        assignmentRepository
+            .findByApartmentAndStateAndDateRange(
+                AuthUtils.getUsername(), null, null, startDate, endDate)
+            .stream()
+            .map(AssignmentDto::new)
+            .collect(Collectors.toSet()));
+    return schedulerInfo;
+  }
 
-    // Now we get the pending events until 5 days from now to check for alerts
+  /**
+   * Computes upcoming-event alerts. Each alert links the upcoming event that triggers it with the
+   * previous event whose workload (assignments/tasks) still needs to be completed.
+   *
+   * <p>The result is ordered by severity (red alerts first, then yellow alerts) and, within each
+   * color, by the triggering event's start date ascending.
+   */
+  public AlertInfo getAlerts() {
+    List<AlertItem> alerts = new ArrayList<>();
+
+    // Get the pending events until 5 days from now to check for alerts
     List<Event> alertEvents =
         eventRepository.advancedSearch(
             AuthUtils.getUsername(),
@@ -250,7 +270,10 @@ public class WorkflowService {
     final Instant RED_FLAG_LIMIT = Instant.now(clock).plusSeconds(2 * 24 * 3600);
     final Instant YELLOW_FLAG_LIMIT = Instant.now(clock).plusSeconds(5 * 24 * 3600);
 
-    // === Alert logic: resolve predecessors, process them, and compute alerts ===
+    Map<UUID, ApartmentInfo> apartmentInfoMap = new HashMap<>();
+    Map<UUID, EventSchedulerDto> eventMap = new HashMap<>();
+
+    // Resolve predecessors, process them, and compute alerts
     for (Map.Entry<UUID, List<Event>> entry : alertEventsByApartment.entrySet()) {
       UUID apartmentId = entry.getKey();
       List<Event> aptEvents = entry.getValue();
@@ -258,15 +281,6 @@ public class WorkflowService {
 
       for (int i = 0; i < aptEvents.size(); i++) {
         Event currentEvent = aptEvents.get(i);
-
-        // Get or create candidate DTO (may already exist from range processing)
-        EventSchedulerDto currentEventSched =
-            processEventForScheduler(currentEvent, apartmentInfoMap, eventMap);
-        // Mark overdue if the event start date is in the past
-        if (currentEvent.getStartDate().isBefore(Instant.now(clock))) {
-          currentEventSched.setOverdue(true);
-        }
-
         // If the apartment is ready and this is the next pending event, skip alert
         ApartmentInfo aptInfo = apartmentInfoMap.get(apartmentId);
         if (aptInfo != null
@@ -297,9 +311,6 @@ public class WorkflowService {
           continue;
         }
 
-        // Store predecessor relationship
-        schedulerInfo.getPreviousEvent().put(currentEvent.getId(), predecessor.getId());
-
         // Process the predecessor (cached in eventMap) — this is what alert logic inspects
         EventSchedulerDto previousEventSched =
             processEventForScheduler(predecessor, apartmentInfoMap, eventMap);
@@ -307,13 +318,17 @@ public class WorkflowService {
         // Red alert: event starts within 2 days
         if (currentEvent.getStartDate().isBefore(RED_FLAG_LIMIT)) {
           if (!previousEventSched.getMandatoryUnassignedTasks().isEmpty()) {
-            currentEventSched.setAlert(Alert.DAYS_LEFT_2_UNASSIGNED);
-            schedulerInfo.getRedAlertEvents().add(currentEventSched.getId());
+            alerts.add(
+                new AlertItem(
+                    Alert.DAYS_LEFT_2_UNASSIGNED, new EventDto(currentEvent), previousEventSched));
             continue;
           }
           if (hasUnfinishedTasks(previousEventSched)) {
-            currentEventSched.setAlert(Alert.DAYS_LEFT_2_NOT_COMPLETED);
-            schedulerInfo.getRedAlertEvents().add(currentEventSched.getId());
+            alerts.add(
+                new AlertItem(
+                    Alert.DAYS_LEFT_2_NOT_COMPLETED,
+                    new EventDto(currentEvent),
+                    previousEventSched));
             continue;
           }
         }
@@ -321,25 +336,25 @@ public class WorkflowService {
         // Yellow alert: event starts within 5 days
         if (currentEvent.getStartDate().isBefore(YELLOW_FLAG_LIMIT)) {
           if (!previousEventSched.getMandatoryUnassignedTasks().isEmpty()) {
-            currentEventSched.setAlert(Alert.DAYS_LEFT_5_UNASSIGNED);
-            schedulerInfo.getYellowAlertEvents().add(currentEventSched.getId());
+            alerts.add(
+                new AlertItem(
+                    Alert.DAYS_LEFT_5_UNASSIGNED, new EventDto(currentEvent), previousEventSched));
           }
         }
       }
     }
 
-    // Set the central event info map and propagate alerts to calendar events in eventInfo
-    schedulerInfo.setEventInfo(eventMap);
+    // Red alerts first, then yellow; within each color, ascending by triggering event start date
+    alerts.sort(
+        Comparator.comparing((AlertItem item) -> item.getAlertType().isRed() ? 0 : 1)
+            .thenComparing(item -> item.getEvent().getStartDate()));
 
-    // Map assignments in range to DTOs (event is already JOIN FETCHed)
-    schedulerInfo.setAssignments(
-        assignmentRepository
-            .findByApartmentAndStateAndDateRange(
-                AuthUtils.getUsername(), null, null, startDate, endDate)
-            .stream()
-            .map(AssignmentDto::new)
-            .collect(Collectors.toSet()));
-    return schedulerInfo;
+    AlertInfo alertInfo = new AlertInfo();
+    alertInfo.setAlerts(alerts);
+    alertInfo.setNRedAlerts(
+        (int) alerts.stream().filter(item -> item.getAlertType().isRed()).count());
+    alertInfo.setNYellowAlerts(alerts.size() - alertInfo.getNRedAlerts());
+    return alertInfo;
   }
 
   /** Checks whether the event scheduler DTO has any unfinished (pending) assignments. */

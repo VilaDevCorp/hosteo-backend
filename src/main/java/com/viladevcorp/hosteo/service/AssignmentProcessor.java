@@ -26,7 +26,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
 @Slf4j
 @Service
@@ -223,23 +222,18 @@ public class AssignmentProcessor {
 
     Event event = assignment.getEvent();
     checkWhetherEventAssignmentsCanBeAltered(event);
-    assignment.setState(newState);
+    validateAssignment(
+        assignment.getId(),
+        event.getId(),
+        assignment.getStartDate(),
+        assignment.getEndDate(),
+        newState,
+        assignment.getTask(),
+        assignment.getWorker());
 
+    assignment.setState(newState);
     Assignment result = assignmentRepository.save(assignment);
     workflowService.calculateApartmentState(assignment.getTask().getApartment().getId());
-    try {
-      validateAssignment(
-          assignment.getId(),
-          event.getId(),
-          assignment.getStartDate(),
-          assignment.getEndDate(),
-          newState,
-          assignment.getTask(),
-          assignment.getWorker());
-    } catch (Exception e) {
-      TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
-      throw e;
-    }
     return result;
   }
 

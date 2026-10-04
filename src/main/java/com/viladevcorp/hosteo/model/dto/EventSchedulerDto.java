@@ -6,6 +6,7 @@ import com.viladevcorp.hosteo.model.types.EventSource;
 import java.time.Instant;
 import java.util.*;
 
+import com.viladevcorp.hosteo.model.types.EventState;
 import com.viladevcorp.hosteo.model.types.EventType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,6 +29,8 @@ public class EventSchedulerDto extends BaseEntityDto {
   private UUID id;
 
   private EventType type;
+
+  private EventState state;
 
   private Instant startDate;
 

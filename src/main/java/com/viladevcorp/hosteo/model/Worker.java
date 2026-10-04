@@ -32,6 +32,7 @@ public class Worker extends BaseEntity {
   private String name;
 
   @Enumerated(EnumType.STRING)
+  @Builder.Default
   private Language language = Language.EN;
 
   private double salary;

@@ -1,6 +1,7 @@
 package com.viladevcorp.hosteo.controller;
 
 import com.viladevcorp.hosteo.model.SchedulerInfo;
+import com.viladevcorp.hosteo.model.dto.AlertInfo;
 import com.viladevcorp.hosteo.service.WorkflowService;
 import com.viladevcorp.hosteo.utils.ApiResponse;
 import java.time.Instant;
@@ -27,6 +28,18 @@ public class WorkflowController {
   @Autowired
   public WorkflowController(WorkflowService workflowService) {
     this.workflowService = workflowService;
+  }
+
+  @GetMapping("/alerts")
+  public ResponseEntity<ApiResponse<AlertInfo>> getAlerts() {
+    log.info("[WorkflowController.getAlerts] - Getting alerts");
+    AlertInfo alerts = workflowService.getAlerts();
+    log.info(
+        "[WorkflowController.getAlerts] - Retrieved {} alerts ({} red, {} yellow)",
+        alerts.getAlerts().size(),
+        alerts.getNRedAlerts(),
+        alerts.getNYellowAlerts());
+    return ResponseEntity.ok().body(new ApiResponse<>(alerts));
   }
 
   @GetMapping("/scheduler/{startDateStr}")
