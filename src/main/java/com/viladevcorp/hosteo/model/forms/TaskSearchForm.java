@@ -19,6 +19,8 @@ public class TaskSearchForm {
 
   private TaskType type;
 
+  private Boolean visible;
+
   private int pageNumber;
 
   private int pageSize;

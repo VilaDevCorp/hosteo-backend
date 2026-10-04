@@ -25,6 +25,4 @@ public class ApartmentUpdateForm {
   private String bookingId;
 
   private Address address;
-
-  private boolean visible;
 }

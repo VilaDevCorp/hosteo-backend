@@ -36,5 +36,7 @@ public class TaskWithApartmentDto extends BaseEntityDto {
 
   private List<String> steps = new ArrayList<>();
 
+  private boolean visible = true;
+
   private ApartmentDto apartment;
 }

@@ -56,6 +56,8 @@ public class Task extends BaseEntity {
   @Builder.Default
   private List<String> steps = new ArrayList<>();
 
+  @Builder.Default private boolean visible = true;
+
   @Override
   public BaseEntityDto toDto() {
     return new TaskDto(this);

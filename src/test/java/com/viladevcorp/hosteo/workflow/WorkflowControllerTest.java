@@ -138,8 +138,8 @@ class WorkflowControllerTest extends BaseControllerTest {
       assertNotNull(info);
       // The scheduler renders calendar events within the requested week.
       Set<EventSchedulerDto> events = info.getEvents();
-      assertTrue(events.contains(eventIn1Days));
-      assertTrue(events.contains(eventIn3Days));
+      assertTrue(events.stream().anyMatch((event) -> event.getId().equals(eventIn1Days.getId())));
+      assertTrue(events.stream().anyMatch((event) -> event.getId().equals(eventIn3Days.getId())));
     }
   }
 

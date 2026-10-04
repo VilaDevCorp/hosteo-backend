@@ -22,6 +22,4 @@ public class WorkerUpdateForm {
   private Language language;
 
   private double salary;
-
-  private boolean visible;
 }

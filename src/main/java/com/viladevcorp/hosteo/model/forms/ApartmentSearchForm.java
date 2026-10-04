@@ -13,6 +13,7 @@ public class ApartmentSearchForm {
 
   private String name;
   private Set<String> states;
+  private Boolean visible;
   private int pageNumber;
   private int pageSize;
 }

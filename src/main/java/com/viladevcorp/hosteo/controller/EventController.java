@@ -67,6 +67,9 @@ public class EventController {
     } catch (NotAvailableDatesException e) {
       return ResponseEntity.status(HttpStatus.CONFLICT)
           .body(new ApiResponse<>(CodeErrors.NOT_AVAILABLE_DATES, e.getMessage()));
+    } catch (EntityFrozenException e) {
+      return ResponseEntity.status(HttpStatus.CONFLICT)
+          .body(new ApiResponse<>(CodeErrors.ENTITY_FROZEN, e.getMessage()));
     } catch (NextOfPendingCannotBeInprogressOrFinished e) {
       return ResponseEntity.status(HttpStatus.CONFLICT)
           .body(
@@ -111,6 +114,9 @@ public class EventController {
     } catch (NotAvailableDatesException e) {
       return ResponseEntity.status(HttpStatus.CONFLICT)
           .body(new ApiResponse<>(CodeErrors.NOT_AVAILABLE_DATES, e.getMessage()));
+    } catch (EntityFrozenException e) {
+      return ResponseEntity.status(HttpStatus.CONFLICT)
+          .body(new ApiResponse<>(CodeErrors.ENTITY_FROZEN, e.getMessage()));
     } catch (NextOfPendingCannotBeInprogressOrFinished e) {
       return ResponseEntity.status(HttpStatus.CONFLICT)
           .body(
@@ -145,6 +151,9 @@ public class EventController {
     } catch (EntityNotFoundException e) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(new ApiResponse<>(null, e.getMessage()));
+    } catch (EntityFrozenException e) {
+      return ResponseEntity.status(HttpStatus.CONFLICT)
+          .body(new ApiResponse<>(CodeErrors.ENTITY_FROZEN, e.getMessage()));
     } catch (NextOfPendingCannotBeInprogressOrFinished e) {
       return ResponseEntity.status(HttpStatus.CONFLICT)
           .body(
@@ -228,6 +237,9 @@ public class EventController {
     } catch (EntityNotFoundException e) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(new ApiResponse<>(null, e.getMessage()));
+    } catch (EntityFrozenException e) {
+      return ResponseEntity.status(HttpStatus.CONFLICT)
+          .body(new ApiResponse<>(CodeErrors.ENTITY_FROZEN, e.getMessage()));
     }
   }
 

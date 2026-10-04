@@ -110,6 +110,12 @@ public class EventProcessor {
     }
   }
 
+  private void checkApartmentVisible(Event event) throws EntityFrozenException {
+    if (event.getApartment() != null && !event.getApartment().isVisible()) {
+      throw new EntityFrozenException("Cannot modify an event of a hidden apartment.");
+    }
+  }
+
   @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
   public Event executeCreateEventLogic(EventCreateForm form)
       throws EntityNotFoundException,
@@ -117,13 +123,17 @@ public class EventProcessor {
           PrevOfInProgressCannotBePendingOrInProgress,
           PrevOfFinishedCannotBeNotPendingOrInProgress,
           NextOfPendingCannotBeInprogressOrFinished,
-          NextOfInProgressCannotBeFinishedOrInProgress {
+          NextOfInProgressCannotBeFinishedOrInProgress,
+          EntityFrozenException {
     Optional<Apartment> apartmentOpt =
         apartmentRepository.findById(form.getApartmentId(), AuthUtils.getUsername());
     if (apartmentOpt.isEmpty()) {
       throw new EntityNotFoundException("Apartment not found with id: " + form.getApartmentId());
     }
     Apartment apartment = apartmentOpt.get();
+    if (!apartment.isVisible()) {
+      throw new EntityFrozenException("Cannot create an event for a hidden apartment.");
+    }
     Pair<Event, Assignment> conflicts =
         ServiceUtils.getScheduleConflicts(
             eventRepository,
@@ -163,8 +173,10 @@ public class EventProcessor {
   }
 
   @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
-  public void executeDeleteEventLogic(UUID eventId) throws EntityNotFoundException {
+  public void executeDeleteEventLogic(UUID eventId)
+      throws EntityNotFoundException, EntityFrozenException {
     Event event = getEventById(eventId);
+    checkApartmentVisible(event);
     UUID apartmentId = event.getApartment().getId();
     eventRepository.delete(event);
     event.getApartment().getEvents().remove(event);
@@ -177,8 +189,10 @@ public class EventProcessor {
           PrevOfInProgressCannotBePendingOrInProgress,
           PrevOfFinishedCannotBeNotPendingOrInProgress,
           NextOfPendingCannotBeInprogressOrFinished,
-          NextOfInProgressCannotBeFinishedOrInProgress {
+          NextOfInProgressCannotBeFinishedOrInProgress,
+          EntityFrozenException {
     Event event = getEventById(eventId);
+    checkApartmentVisible(event);
     UUID apartmentId = event.getApartment().getId();
     event.setState(state);
     Event result = eventRepository.save(event);

@@ -23,6 +23,7 @@ public class EventDto extends BaseEntityDto {
   private ApartmentDto apartment;
   private Instant startDate;
   private Instant endDate;
+  private boolean frozen;
 
   public EventDto(Event event) {
     if (event == null) {
@@ -31,6 +32,7 @@ public class EventDto extends BaseEntityDto {
     BeanUtils.copyProperties(event, this, "apartment");
     if (event.getApartment() != null) {
       this.apartment = new ApartmentDto(event.getApartment());
+      this.frozen = !event.getApartment().isVisible();
     }
   }
 }

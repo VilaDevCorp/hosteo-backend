@@ -38,5 +38,10 @@ public class CodeErrors {
   public static final String ASSIGNMENT_STARTS_BEFORE_EVENT_ENDS =
       "ASSIGNMENT_STARTS_BEFORE_EVENT_ENDS";
 
+  public static final String ENTITY_HAS_DEPENDENCIES = "ENTITY_HAS_DEPENDENCIES";
+  public static final String ENTITY_HAS_PENDING_ASSIGNMENTS = "ENTITY_HAS_PENDING_ASSIGNMENTS";
+  public static final String ENTITY_HAS_ACTIVE_EVENTS = "ENTITY_HAS_ACTIVE_EVENTS";
+  public static final String ENTITY_FROZEN = "ENTITY_FROZEN";
+
   public static final String UNEXPECTED_ERROR = "UNEXPECTED_ERROR";
 }

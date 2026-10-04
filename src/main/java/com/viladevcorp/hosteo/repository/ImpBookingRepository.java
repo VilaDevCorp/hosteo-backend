@@ -2,6 +2,7 @@ package com.viladevcorp.hosteo.repository;
 
 import com.viladevcorp.hosteo.model.ImpBooking;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -36,4 +37,11 @@ public interface ImpBookingRepository extends EntityRepository<ImpBooking> {
   boolean existsByCreatedByUsername(String username);
 
   List<ImpBooking> findByNameAndCreatedByUsername(String name, String username);
+
+  @Modifying
+  @Query(
+      "DELETE FROM ImpBooking b WHERE b.apartment.id = :apartmentId "
+          + "AND b.createdBy.username = :username")
+  void deleteByApartmentId(
+      @Param("apartmentId") UUID apartmentId, @Param("username") String username);
 }

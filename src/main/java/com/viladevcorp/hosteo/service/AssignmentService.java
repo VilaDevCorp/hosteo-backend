@@ -63,7 +63,8 @@ public class AssignmentService {
           ChangeInAssignmentsOfPastEventException,
           AssignChangeLastFinishedEventWhenAnotherEventInProgress,
           AssignmentEndsAfterNextEventStarts,
-          AssignmentStartsBeforeEventEnds {
+          AssignmentStartsBeforeEventEnds,
+          EntityFrozenException {
     Optional<Task> taskOpt = taskRepository.findById(form.getTaskId(), AuthUtils.getUsername());
     if (taskOpt.isEmpty()) {
       throw new EntityNotFoundException("Task not found with id: " + form.getTaskId());
@@ -78,6 +79,17 @@ public class AssignmentService {
     assignmentProcessor.checkWhetherEventAssignmentsCanBeAltered(event);
 
     Worker worker = workerService.getWorkerById(form.getWorkerId());
+
+    if (!task.isVisible()) {
+      throw new EntityFrozenException("Cannot create an assignment for a hidden task.");
+    }
+    if (task.getApartment() == null || !task.getApartment().isVisible()) {
+      throw new EntityFrozenException(
+          "Cannot create an assignment for a hidden apartment.");
+    }
+    if (!worker.isVisible()) {
+      throw new EntityFrozenException("Cannot assign a hidden worker.");
+    }
 
     assignmentProcessor.validateAssignment(
         null,
@@ -111,13 +123,18 @@ public class AssignmentService {
           ChangeInAssignmentsOfPastEventException,
           AssignChangeLastFinishedEventWhenAnotherEventInProgress,
           AssignmentEndsAfterNextEventStarts,
-          AssignmentStartsBeforeEventEnds {
+          AssignmentStartsBeforeEventEnds,
+          EntityFrozenException {
     Assignment assignment = assignmentProcessor.getAssignmentById(form.getId());
 
     Event event = assignment.getEvent();
     assignmentProcessor.checkWhetherEventAssignmentsCanBeAltered(event);
+    assignmentProcessor.checkAssignmentParentsVisible(assignment);
 
     Worker worker = workerService.getWorkerById(form.getWorkerId());
+    if (!worker.isVisible()) {
+      throw new EntityFrozenException("Cannot reassign to a hidden worker.");
+    }
     Task task = assignment.getTask();
     assignmentProcessor.validateAssignment(
         assignment.getId(),
@@ -142,8 +159,9 @@ public class AssignmentService {
           ChangeInAssignmentsOfPastEventException,
           AssignChangeLastFinishedEventWhenAnotherEventInProgress,
           AssignmentEndsAfterNextEventStarts,
-          AssignmentStartsBeforeEventEnds {
-
+          AssignmentStartsBeforeEventEnds,
+          EntityFrozenException {
+    assignmentProcessor.checkAssignmentParentsVisible(assignment);
     return assignmentProcessor.executeUpdateAssignmentState(assignment, newState);
   }
 
@@ -275,10 +293,12 @@ public class AssignmentService {
   public void deleteAssignment(UUID id)
       throws EntityNotFoundException,
           ChangeInAssignmentsOfPastEventException,
-          AssignChangeLastFinishedEventWhenAnotherEventInProgress {
+          AssignChangeLastFinishedEventWhenAnotherEventInProgress,
+          EntityFrozenException {
     Assignment assignment = assignmentProcessor.getAssignmentById(id);
     Event event = assignment.getEvent();
     assignmentProcessor.checkWhetherEventAssignmentsCanBeAltered(event);
+    assignmentProcessor.checkAssignmentParentsVisible(assignment);
     Apartment apartment = assignment.getTask().getApartment();
     assignmentRepository.delete(assignment);
     event.getAssignments().remove(assignment);

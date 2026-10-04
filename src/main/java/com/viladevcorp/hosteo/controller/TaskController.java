@@ -1,5 +1,7 @@
 package com.viladevcorp.hosteo.controller;
 
+import com.viladevcorp.hosteo.exceptions.EntityFrozenException;
+import com.viladevcorp.hosteo.exceptions.EntityHasDependenciesException;
 import com.viladevcorp.hosteo.model.Page;
 import com.viladevcorp.hosteo.model.PageMetadata;
 import com.viladevcorp.hosteo.model.Task;
@@ -21,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -57,6 +60,9 @@ public class TaskController {
     } catch (EntityNotFoundException e) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(new ApiResponse<>(null, e.getMessage()));
+    } catch (EntityFrozenException e) {
+      return ResponseEntity.status(HttpStatus.CONFLICT)
+          .body(new ApiResponse<>(null, e.getMessage()));
     }
   }
 
@@ -77,6 +83,9 @@ public class TaskController {
       return ResponseEntity.ok().body(new ApiResponse<>(new TaskDto(task)));
     } catch (EntityNotFoundException e) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
+          .body(new ApiResponse<>(null, e.getMessage()));
+    } catch (EntityFrozenException e) {
+      return ResponseEntity.status(HttpStatus.CONFLICT)
           .body(new ApiResponse<>(null, e.getMessage()));
     }
   }
@@ -118,6 +127,38 @@ public class TaskController {
       taskService.deleteTask(id);
       log.info("[TaskController.deleteTask] - Task deleted successfully");
       return ResponseEntity.ok().body(new ApiResponse<>(null, "Task deleted successfully."));
+    } catch (EntityNotFoundException e) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND)
+          .body(new ApiResponse<>(null, e.getMessage()));
+    } catch (EntityHasDependenciesException e) {
+      return ResponseEntity.status(HttpStatus.CONFLICT)
+          .body(new ApiResponse<>(null, e.getMessage()));
+    }
+  }
+
+  @PatchMapping("/task/{id}/hide")
+  public ResponseEntity<ApiResponse<Void>> hideTask(@PathVariable UUID id) {
+    log.info("[TaskController.hideTask] - Hiding task with id: {}", id);
+    try {
+      taskService.hideTask(id);
+      log.info("[TaskController.hideTask] - Task hidden successfully");
+      return ResponseEntity.ok().body(new ApiResponse<>(null, "Task hidden successfully."));
+    } catch (EntityNotFoundException e) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND)
+          .body(new ApiResponse<>(null, e.getMessage()));
+    } catch (EntityHasDependenciesException e) {
+      return ResponseEntity.status(HttpStatus.CONFLICT)
+          .body(new ApiResponse<>(null, e.getMessage()));
+    }
+  }
+
+  @PatchMapping("/task/{id}/unhide")
+  public ResponseEntity<ApiResponse<Void>> unhideTask(@PathVariable UUID id) {
+    log.info("[TaskController.unhideTask] - Unhiding task with id: {}", id);
+    try {
+      taskService.unhideTask(id);
+      log.info("[TaskController.unhideTask] - Task unhidden successfully");
+      return ResponseEntity.ok().body(new ApiResponse<>(null, "Task unhidden successfully."));
     } catch (EntityNotFoundException e) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(new ApiResponse<>(null, e.getMessage()));

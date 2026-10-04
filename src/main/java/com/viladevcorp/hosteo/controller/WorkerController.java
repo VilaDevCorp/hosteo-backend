@@ -1,5 +1,6 @@
 package com.viladevcorp.hosteo.controller;
 
+import com.viladevcorp.hosteo.exceptions.EntityHasDependenciesException;
 import com.viladevcorp.hosteo.model.Page;
 import com.viladevcorp.hosteo.model.PageMetadata;
 import com.viladevcorp.hosteo.model.Worker;
@@ -21,6 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -110,6 +112,38 @@ public class WorkerController {
       workerService.deleteWorker(id);
       log.info("[WorkerController.deleteWorker] - Worker deleted");
       return ResponseEntity.ok().body(new ApiResponse<>(null, "Worker deleted successfully."));
+    } catch (EntityNotFoundException e) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND)
+          .body(new ApiResponse<>(null, e.getMessage()));
+    } catch (EntityHasDependenciesException e) {
+      return ResponseEntity.status(HttpStatus.CONFLICT)
+          .body(new ApiResponse<>(null, e.getMessage()));
+    }
+  }
+
+  @PatchMapping("/worker/{id}/hide")
+  public ResponseEntity<ApiResponse<Void>> hideWorker(@PathVariable UUID id) {
+    log.info("[WorkerController.hideWorker] - Hiding worker with id: {}", id);
+    try {
+      workerService.hideWorker(id);
+      log.info("[WorkerController.hideWorker] - Worker hidden");
+      return ResponseEntity.ok().body(new ApiResponse<>(null, "Worker hidden successfully."));
+    } catch (EntityNotFoundException e) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND)
+          .body(new ApiResponse<>(null, e.getMessage()));
+    } catch (EntityHasDependenciesException e) {
+      return ResponseEntity.status(HttpStatus.CONFLICT)
+          .body(new ApiResponse<>(null, e.getMessage()));
+    }
+  }
+
+  @PatchMapping("/worker/{id}/unhide")
+  public ResponseEntity<ApiResponse<Void>> unhideWorker(@PathVariable UUID id) {
+    log.info("[WorkerController.unhideWorker] - Unhiding worker with id: {}", id);
+    try {
+      workerService.unhideWorker(id);
+      log.info("[WorkerController.unhideWorker] - Worker unhidden");
+      return ResponseEntity.ok().body(new ApiResponse<>(null, "Worker unhidden successfully."));
     } catch (EntityNotFoundException e) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(new ApiResponse<>(null, e.getMessage()));

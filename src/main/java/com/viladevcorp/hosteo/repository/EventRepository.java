@@ -4,6 +4,7 @@ import com.viladevcorp.hosteo.model.Event;
 import com.viladevcorp.hosteo.model.types.EventState;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -131,4 +132,21 @@ public interface EventRepository extends EntityRepository<Event> {
   @EntityGraph(attributePaths = {"assignments"})
   Optional<Event> findFirstByCreatedByUsernameAndApartmentIdAndStateOrderByStartDateAsc(
       String username, UUID apartmentId, EventState state);
+
+  @Query(
+      "SELECT CASE WHEN COUNT(b) > 0 THEN true ELSE false END FROM Event b "
+          + "WHERE b.createdBy.username = :username "
+          + "AND b.apartment.id = :apartmentId "
+          + "AND b.state IN :states")
+  boolean existsByApartmentIdAndStateIn(
+      @Param("username") String username,
+      @Param("apartmentId") UUID apartmentId,
+      @Param("states") Set<EventState> states);
+
+  @Modifying
+  @Query(
+      "DELETE FROM Event b WHERE b.apartment.id = :apartmentId "
+          + "AND b.createdBy.username = :username")
+  void deleteByApartmentId(
+      @Param("apartmentId") UUID apartmentId, @Param("username") String username);
 }

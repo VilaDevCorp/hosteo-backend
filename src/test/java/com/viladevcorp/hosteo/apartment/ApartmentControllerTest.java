@@ -165,7 +165,6 @@ class ApartmentControllerTest extends BaseControllerTest {
       form.setAddress(UPDATED_APARTMENT_ADDRESS);
       form.setAirbnbId(UPDATED_APARTMENT_AIRBNB_ID);
       form.setBookingId(UPDATED_APARTMENT_BOOKING_ID);
-      form.setVisible(UPDATED_APARTMENT_VISIBLE);
 
       mockMvc
           .perform(
@@ -181,7 +180,6 @@ class ApartmentControllerTest extends BaseControllerTest {
       assertEquals(UPDATED_APARTMENT_ADDRESS, apartmentUpdated.getAddress());
       assertEquals(UPDATED_APARTMENT_AIRBNB_ID, apartmentUpdated.getAirbnbId());
       assertEquals(UPDATED_APARTMENT_BOOKING_ID, apartmentUpdated.getBookingId());
-      assertEquals(UPDATED_APARTMENT_VISIBLE, apartmentUpdated.isVisible());
     }
 
     @Test

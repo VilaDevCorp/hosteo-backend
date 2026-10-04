@@ -23,6 +23,10 @@ public class AssignmentDto extends BaseEntityDto {
     if (assignment.getEvent() != null) {
       this.event = new EventDto(assignment.getEvent());
     }
+    this.frozen =
+        !assignment.getTask().isVisible()
+            || (assignment.getTask().getApartment() != null
+                && !assignment.getTask().getApartment().isVisible());
   }
 
   private TaskWithApartmentDto task;
@@ -36,4 +40,6 @@ public class AssignmentDto extends BaseEntityDto {
   private AssignmentState state;
 
   private EventDto event;
+
+  private boolean frozen;
 }

@@ -54,7 +54,8 @@ public class EventService {
           PrevOfInProgressCannotBePendingOrInProgress,
           PrevOfFinishedCannotBeNotPendingOrInProgress,
           NextOfPendingCannotBeInprogressOrFinished,
-          NextOfInProgressCannotBeFinishedOrInProgress {
+          NextOfInProgressCannotBeFinishedOrInProgress,
+          EntityFrozenException {
     return eventProcessor.executeCreateEventLogic(form);
   }
 
@@ -64,8 +65,12 @@ public class EventService {
           PrevOfInProgressCannotBePendingOrInProgress,
           PrevOfFinishedCannotBeNotPendingOrInProgress,
           NextOfPendingCannotBeInprogressOrFinished,
-          NextOfInProgressCannotBeFinishedOrInProgress {
+          NextOfInProgressCannotBeFinishedOrInProgress,
+          EntityFrozenException {
     Event event = getEventById(form.getId());
+    if (event.getApartment() != null && !event.getApartment().isVisible()) {
+      throw new EntityFrozenException("Cannot update an event of a hidden apartment.");
+    }
     UUID apartmentId = event.getApartment().getId();
 
     Pair<Event, Assignment> conflicts =
@@ -102,7 +107,8 @@ public class EventService {
           PrevOfInProgressCannotBePendingOrInProgress,
           PrevOfFinishedCannotBeNotPendingOrInProgress,
           NextOfPendingCannotBeInprogressOrFinished,
-          NextOfInProgressCannotBeFinishedOrInProgress {
+          NextOfInProgressCannotBeFinishedOrInProgress,
+          EntityFrozenException {
     return eventProcessor.executeUpdateStateLogic(eventId, state);
   }
 
@@ -226,8 +232,11 @@ public class EventService {
     return new PageMetadata(totalPages, totalRows);
   }
 
-  public void deleteEvent(UUID id) throws EntityNotFoundException {
+  public void deleteEvent(UUID id) throws EntityNotFoundException, EntityFrozenException {
     Event event = getEventById(id);
+    if (event.getApartment() != null && !event.getApartment().isVisible()) {
+      throw new EntityFrozenException("Cannot delete an event of a hidden apartment.");
+    }
     eventRepository.delete(event);
     event.getApartment().getEvents().remove(event);
     workflowService.calculateApartmentState(event.getApartment().getId());

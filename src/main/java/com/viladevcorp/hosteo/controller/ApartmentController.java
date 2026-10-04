@@ -1,5 +1,6 @@
 package com.viladevcorp.hosteo.controller;
 
+import com.viladevcorp.hosteo.exceptions.EntityHasDependenciesException;
 import com.viladevcorp.hosteo.model.Apartment;
 import com.viladevcorp.hosteo.model.Page;
 import com.viladevcorp.hosteo.model.PageMetadata;
@@ -22,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -111,6 +113,35 @@ public class ApartmentController {
       apartmentService.deleteApartment(id);
       log.info("[ApartmentController.deleteApartment] - Apartment deleted");
       return ResponseEntity.ok().body(new ApiResponse<>(null, "Apartment deleted successfully."));
+    } catch (EntityNotFoundException e) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND)
+          .body(new ApiResponse<>(null, e.getMessage()));
+    }
+  }
+
+  @PatchMapping("/apartment/{id}/hide")
+  public ResponseEntity<ApiResponse<Void>> hideApartment(@PathVariable UUID id) {
+    log.info("[ApartmentController.hideApartment] - Hiding apartment with id: {}", id);
+    try {
+      apartmentService.hideApartment(id);
+      log.info("[ApartmentController.hideApartment] - Apartment hidden");
+      return ResponseEntity.ok().body(new ApiResponse<>(null, "Apartment hidden successfully."));
+    } catch (EntityNotFoundException e) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND)
+          .body(new ApiResponse<>(null, e.getMessage()));
+    } catch (EntityHasDependenciesException e) {
+      return ResponseEntity.status(HttpStatus.CONFLICT)
+          .body(new ApiResponse<>(null, e.getMessage()));
+    }
+  }
+
+  @PatchMapping("/apartment/{id}/unhide")
+  public ResponseEntity<ApiResponse<Void>> unhideApartment(@PathVariable UUID id) {
+    log.info("[ApartmentController.unhideApartment] - Unhiding apartment with id: {}", id);
+    try {
+      apartmentService.unhideApartment(id);
+      log.info("[ApartmentController.unhideApartment] - Apartment unhidden");
+      return ResponseEntity.ok().body(new ApiResponse<>(null, "Apartment unhidden successfully."));
     } catch (EntityNotFoundException e) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(new ApiResponse<>(null, e.getMessage()));

@@ -156,7 +156,6 @@ class WorkerControllerTest extends BaseControllerTest {
       BeanUtils.copyProperties(workerToUpdate, form);
       form.setName(UPDATED_WORKER_NAME);
       form.setLanguage(UPDATED_WORKER_LANGUAGE);
-      form.setVisible(UPDATED_WORKER_VISIBLE);
 
       mockMvc
           .perform(
@@ -168,7 +167,6 @@ class WorkerControllerTest extends BaseControllerTest {
           workerRepository.findById(testSetupHelper.getTestWorkers().get(0).getId()).orElse(null);
       assertEquals(UPDATED_WORKER_NAME, workerUpdated.getName());
       assertEquals(UPDATED_WORKER_LANGUAGE, workerUpdated.getLanguage());
-      assertEquals(UPDATED_WORKER_VISIBLE, workerUpdated.isVisible());
     }
 
     @Test
@@ -251,7 +249,7 @@ class WorkerControllerTest extends BaseControllerTest {
       }
       Page<WorkerDto> returnedPage = result.getData();
       List<WorkerDto> workers = returnedPage.getContent();
-      assertEquals(4, workers.size());
+      assertEquals(3, workers.size());
     }
 
     @Test
@@ -284,7 +282,7 @@ class WorkerControllerTest extends BaseControllerTest {
       List<WorkerDto> workers = returnedPage.getContent();
       assertEquals(2, workers.size());
       assertEquals(2, returnedPage.getTotalPages());
-      assertEquals(4, returnedPage.getTotalRows());
+      assertEquals(3, returnedPage.getTotalRows());
     }
 
     @Test

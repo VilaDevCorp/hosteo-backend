@@ -166,7 +166,7 @@ public class ImportService {
                                   .findByAirbnbIdAndCreatedByUsername(
                                       airbnbId, AuthUtils.getUsername())
                                   .orElse(null));
-                  if (apartment == null) {
+                  if (apartment == null || !apartment.isVisible()) {
                     return null;
                   }
 
@@ -223,7 +223,7 @@ public class ImportService {
                                   .findByBookingIdAndCreatedByUsername(
                                       bookingId, AuthUtils.getUsername())
                                   .orElse(null));
-                  if (apartment == null) {
+                  if (apartment == null || !apartment.isVisible()) {
                     return null;
                   }
                   Instant startDate =

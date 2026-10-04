@@ -64,6 +64,10 @@ public class AssignmentController {
           "[AssignmentController] - CompleteTaskOnNotFinishedEventException: {}", e.getMessage());
       return ResponseEntity.status(HttpStatus.CONFLICT)
           .body(new ApiResponse<>(CodeErrors.COMPLETE_TASK_ON_NOT_FINISHED_EVENT, e.getMessage()));
+    } catch (EntityFrozenException e) {
+      log.error("[AssignmentController] - EntityFrozenException: {}", e.getMessage());
+      return ResponseEntity.status(HttpStatus.CONFLICT)
+          .body(new ApiResponse<>(CodeErrors.ENTITY_FROZEN, e.getMessage()));
     } catch (ChangeInAssignmentsOfPastEventException e) {
       log.error(
           "[AssignmentController] - ChangeInAssignmentsOfPastEventException: {}", e.getMessage());
@@ -216,6 +220,10 @@ public class AssignmentController {
           "[AssignmentController] - ChangeInAssignmentsOfPastEventException: {}", e.getMessage());
       return ResponseEntity.status(HttpStatus.CONFLICT)
           .body(new ApiResponse<>(CodeErrors.CHANGE_IN_ASSIGNMENTS_OF_PAST_EVENT, e.getMessage()));
+    } catch (EntityFrozenException e) {
+      log.error("[AssignmentController] - EntityFrozenException: {}", e.getMessage());
+      return ResponseEntity.status(HttpStatus.CONFLICT)
+          .body(new ApiResponse<>(CodeErrors.ENTITY_FROZEN, e.getMessage()));
     } catch (AssignChangeLastFinishedEventWhenAnotherEventInProgress e) {
       log.error(
           "[AssignmentController] - AssignChangeLastFinishedEventWhenAnotherEventInProgress: {}",

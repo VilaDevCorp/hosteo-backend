@@ -212,10 +212,12 @@ public class AssignmentProcessor {
   public void executeDeleteAssignmentLogic(UUID assignmentId)
       throws EntityNotFoundException,
           ChangeInAssignmentsOfPastEventException,
-          AssignChangeLastFinishedEventWhenAnotherEventInProgress {
+          AssignChangeLastFinishedEventWhenAnotherEventInProgress,
+          EntityFrozenException {
     Assignment assignment = getAssignmentById(assignmentId);
     Event event = assignment.getEvent();
     checkWhetherEventAssignmentsCanBeAltered(event);
+    checkAssignmentParentsVisible(assignment);
     Apartment apartment = assignment.getTask().getApartment();
     assignmentRepository.delete(assignment);
     event.getAssignments().remove(assignment);
@@ -231,10 +233,12 @@ public class AssignmentProcessor {
           ChangeInAssignmentsOfPastEventException,
           AssignChangeLastFinishedEventWhenAnotherEventInProgress,
           AssignmentEndsAfterNextEventStarts,
-          AssignmentStartsBeforeEventEnds {
+          AssignmentStartsBeforeEventEnds,
+          EntityFrozenException {
 
     Event event = assignment.getEvent();
     checkWhetherEventAssignmentsCanBeAltered(event);
+    checkAssignmentParentsVisible(assignment);
     validateAssignment(
         assignment.getId(),
         event.getId(),
@@ -256,6 +260,20 @@ public class AssignmentProcessor {
       throw new EntityNotFoundException("Assignment not found with id: " + id);
     } else {
       return result.get();
+    }
+  }
+
+  /**
+   * Task-hide and apartment-hide freeze their assignments (read-only). This guard is used by
+   * edit/state-change/delete paths. A hidden worker does NOT freeze the assignment.
+   */
+  public void checkAssignmentParentsVisible(Assignment assignment) throws EntityFrozenException {
+    if (!assignment.getTask().isVisible()) {
+      throw new EntityFrozenException("Cannot modify an assignment of a hidden task.");
+    }
+    if (assignment.getTask().getApartment() != null
+        && !assignment.getTask().getApartment().isVisible()) {
+      throw new EntityFrozenException("Cannot modify an assignment of a hidden apartment.");
     }
   }
 }

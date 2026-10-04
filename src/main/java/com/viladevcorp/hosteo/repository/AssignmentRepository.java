@@ -1,7 +1,9 @@
 package com.viladevcorp.hosteo.repository;
 
 import com.viladevcorp.hosteo.model.Assignment;
+import com.viladevcorp.hosteo.model.types.AssignmentState;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -58,7 +60,6 @@ public interface AssignmentRepository extends EntityRepository<Assignment> {
           "SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END FROM Assignment a "
               + "WHERE a.createdBy.username = :username "
               + "AND a.worker.id = :workerId "
-              + "AND a.worker.visible = true "
               + "AND a.startDate < :endDate "
               + "AND a.endDate > :startDate "
               + "AND (:excludeAssignmentId IS NULL OR a.id != :excludeAssignmentId) ")
@@ -79,4 +80,23 @@ public interface AssignmentRepository extends EntityRepository<Assignment> {
       "SELECT a FROM Assignment a WHERE a.createdBy.username = :username  "
           + "AND a.id IN :ids ORDER BY a.startDate ASC ")
   List<Assignment> findInIdsAndCreatedByUsername(Set<UUID> ids, String username);
+
+  boolean existsByTaskIdAndCreatedByUsername(UUID taskId, String username);
+
+  boolean existsByWorkerIdAndCreatedByUsername(UUID workerId, String username);
+
+  boolean existsByTaskIdAndStateAndCreatedByUsername(
+      UUID taskId, AssignmentState state, String username);
+
+  boolean existsByWorkerIdAndStateAndCreatedByUsername(
+      UUID workerId, AssignmentState state, String username);
+
+  boolean existsByTaskApartmentIdAndStateAndCreatedByUsername(
+      UUID apartmentId, AssignmentState state, String username);
+
+  @Modifying
+  @Query(
+      "DELETE FROM Assignment a WHERE a.task.apartment.id = :apartmentId "
+          + "AND a.createdBy.username = :username")
+  void deleteByApartmentId(@Param("apartmentId") UUID apartmentId, @Param("username") String username);
 }

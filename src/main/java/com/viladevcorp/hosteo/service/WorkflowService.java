@@ -50,6 +50,11 @@ public class WorkflowService {
     }
     Apartment apartment = apartmentOpt.get();
 
+    // A hidden apartment is frozen history: its state is no longer recomputed.
+    if (!apartment.isVisible()) {
+      return;
+    }
+
     // If the apartment has an event in progress, is occupied
     if (eventRepository.existsEventByApartmentIdAndState(id, EventState.IN_PROGRESS)) {
       apartment.setState(ApartmentState.OCCUPIED);
@@ -57,7 +62,7 @@ public class WorkflowService {
       return;
     }
 
-    List<Task> apartmentTasks = apartment.getTasks();
+    List<Task> apartmentTasks = apartment.getTasks().stream().filter(Task::isVisible).toList();
     // If the apartment has no tasks, its ready (nothing to do)
     if (apartmentTasks.isEmpty()) {
       apartment.setState(ApartmentState.READY);
@@ -89,6 +94,9 @@ public class WorkflowService {
     // We loop through the assignments of that last finished event
     Set<Assignment> eventAssignments = lastFinishedEvent.get().getAssignments();
     for (Assignment assignment : eventAssignments) {
+      if (!assignment.getTask().isVisible()) {
+        continue;
+      }
       // If one of the assignments is not completed, the apartment is still USED (if the not
       // completed is an optional task, we still have to set used, as optional tasks are mandatory
       // when scheduled)
