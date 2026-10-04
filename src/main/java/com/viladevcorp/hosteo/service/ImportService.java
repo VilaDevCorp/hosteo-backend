@@ -18,7 +18,11 @@ import com.viladevcorp.hosteo.utils.AuthUtils;
 import com.viladevcorp.hosteo.utils.CodeErrors;
 import com.viladevcorp.hosteo.utils.ServiceUtils;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -146,8 +150,8 @@ public class ImportService {
     return impBooking;
   }
 
-  public List<ImpBooking> importAirbnbBookings(File importFile) throws IOException, CsvException {
-    try (BufferedReader br = new BufferedReader(new FileReader(importFile))) {
+public List<ImpBooking> importAirbnbBookings(File importFile) throws IOException, CsvException {
+    try (BufferedReader br = Files.newBufferedReader(importFile.toPath(), StandardCharsets.UTF_8)) {
       CSVParser parser = new CSVParserBuilder().withSeparator(AIRBNB_SEPARATOR).build();
       try (CSVReader csvReader =
           new CSVReaderBuilder(br).withSkipLines(1).withCSVParser(parser).build(); ) {
@@ -199,8 +203,8 @@ public class ImportService {
     }
   }
 
-  public List<ImpBooking> importBookingBookings(File importFile) throws IOException, CsvException {
-    try (BufferedReader br = new BufferedReader(new FileReader(importFile))) {
+public List<ImpBooking> importBookingBookings(File importFile) throws IOException, CsvException {
+    try (BufferedReader br = Files.newBufferedReader(importFile.toPath(), StandardCharsets.UTF_8)) {
       CSVParser parser = new CSVParserBuilder().withSeparator(BOOKING_SEPARATOR).build();
       try (CSVReader csvReader =
           new CSVReaderBuilder(br).withSkipLines(1).withCSVParser(parser).build(); ) {
