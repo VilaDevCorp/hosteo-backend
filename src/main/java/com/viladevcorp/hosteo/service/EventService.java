@@ -3,7 +3,7 @@ package com.viladevcorp.hosteo.service;
 import com.viladevcorp.hosteo.exceptions.*;
 import com.viladevcorp.hosteo.model.*;
 import com.viladevcorp.hosteo.model.dto.EventDto;
-import com.viladevcorp.hosteo.model.dto.EventUpdateError;
+import com.viladevcorp.hosteo.model.dto.EventOperationError;
 import com.viladevcorp.hosteo.model.dto.EventWithAssignmentsAndNextEventDto;
 import com.viladevcorp.hosteo.model.forms.EventCreateForm;
 import com.viladevcorp.hosteo.model.forms.EventSearchForm;
@@ -106,9 +106,9 @@ public class EventService {
     return eventProcessor.executeUpdateStateLogic(eventId, state);
   }
 
-  public List<EventUpdateError> updateBulkEventState(Set<UUID> eventIds, EventState state) {
+  public List<EventOperationError> updateBulkEventState(Set<UUID> eventIds, EventState state) {
 
-    List<EventUpdateError> errors = new ArrayList<>();
+    List<EventOperationError> errors = new ArrayList<>();
 
     // Retrieve the events from DB
     List<Event> events =
@@ -121,25 +121,43 @@ public class EventService {
         eventProcessor.executeUpdateStateLogic(event.getId(), state);
       } catch (NextOfInProgressCannotBeFinishedOrInProgress e) {
         errors.add(
-            new EventUpdateError(
+            new EventOperationError(
                 event, CodeErrors.NEXT_OF_INPROGRESS_CANNOT_BE_FINISHED_OR_INPROGRESS));
       } catch (PrevOfFinishedCannotBeNotPendingOrInProgress e) {
         errors.add(
-            new EventUpdateError(
+            new EventOperationError(
                 event, CodeErrors.PREV_OF_FINISHED_CANNOT_BE_PENDING_OR_INPROGRESS));
       } catch (PrevOfInProgressCannotBePendingOrInProgress e) {
         errors.add(
-            new EventUpdateError(
+            new EventOperationError(
                 event, CodeErrors.PREV_OF_INPROGRESS_CANNOT_BE_PENDING_OR_INPROGRESS));
       } catch (NextOfPendingCannotBeInprogressOrFinished e) {
         errors.add(
-            new EventUpdateError(
+            new EventOperationError(
                 event, CodeErrors.NEXT_OF_PENDING_CANNOT_BE_INPROGRESS_OR_FINISHED));
       } catch (EntityNotFoundException e) {
-        errors.add(new EventUpdateError(event, e.getMessage()));
+        errors.add(new EventOperationError(event, e.getMessage()));
       } catch (Exception e) {
         // Catch any other exception to prevent the main loop from stopping.
-        errors.add(new EventUpdateError(event, e.getMessage()));
+        errors.add(new EventOperationError(event, e.getMessage()));
+      }
+    }
+    return errors;
+  }
+
+  public List<EventOperationError> deleteBulkEvents(Set<UUID> eventIds) {
+    List<EventOperationError> errors = new ArrayList<>();
+
+    List<Event> events =
+        eventRepository.findInIdsAndCreatedByUsername(eventIds, AuthUtils.getUsername());
+
+    for (Event event : events) {
+      try {
+        eventProcessor.executeDeleteEventLogic(event.getId());
+      } catch (EntityNotFoundException e) {
+        errors.add(new EventOperationError(event, e.getMessage()));
+      } catch (Exception e) {
+        errors.add(new EventOperationError(event, e.getMessage()));
       }
     }
     return errors;

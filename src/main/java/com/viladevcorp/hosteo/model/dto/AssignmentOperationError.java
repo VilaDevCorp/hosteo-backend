@@ -8,9 +8,9 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class AssignmentUpdateError extends BaseEntityDto {
+public class AssignmentOperationError extends BaseEntityDto {
 
-  public AssignmentUpdateError(Assignment assignment, String error) {
+  public AssignmentOperationError(Assignment assignment, String error) {
     this.assignment = assignment == null ? null : assignment.toDto();
     this.error = error;
   }

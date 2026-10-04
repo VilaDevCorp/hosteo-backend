@@ -169,12 +169,21 @@ public class EventController {
   }
 
   @PatchMapping("/events/state/{state}")
-  public ResponseEntity<ApiResponse<List<EventUpdateError>>> updateEventsState(
+  public ResponseEntity<ApiResponse<List<EventOperationError>>> updateEventsState(
       @RequestBody Set<UUID> eventIds, @PathVariable EventState state) {
     log.info("[EventController.updateEventsState] - Updating events state with ids: {}", eventIds);
-    List<EventUpdateError> updateBulkErrors = eventService.updateBulkEventState(eventIds, state);
+    List<EventOperationError> updateBulkErrors = eventService.updateBulkEventState(eventIds, state);
     log.info("[EventController.updateEventsState] - Events state updated  successfully");
     return ResponseEntity.ok().body(new ApiResponse<>(updateBulkErrors));
+  }
+
+  @DeleteMapping("/events")
+  public ResponseEntity<ApiResponse<List<EventOperationError>>> deleteBulkEvents(
+      @RequestBody Set<UUID> eventIds) {
+    log.info("[EventController.deleteBulkEvents] - Deleting events with ids: {}", eventIds);
+    List<EventOperationError> deleteBulkErrors = eventService.deleteBulkEvents(eventIds);
+    log.info("[EventController.deleteBulkEvents] - Events deleted successfully");
+    return ResponseEntity.ok().body(new ApiResponse<>(deleteBulkErrors));
   }
 
   @GetMapping("/event/{id}")

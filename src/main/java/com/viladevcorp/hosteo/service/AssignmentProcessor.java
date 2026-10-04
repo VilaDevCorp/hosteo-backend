@@ -2,7 +2,6 @@ package com.viladevcorp.hosteo.service;
 
 import com.viladevcorp.hosteo.exceptions.*;
 import com.viladevcorp.hosteo.model.*;
-import com.viladevcorp.hosteo.model.dto.AssignmentUpdateError;
 import com.viladevcorp.hosteo.model.forms.AssignmentCreateForm;
 import com.viladevcorp.hosteo.model.forms.AssignmentSearchForm;
 import com.viladevcorp.hosteo.model.forms.AssignmentUpdateForm;
@@ -207,6 +206,20 @@ public class AssignmentProcessor {
       throw new AssignChangeLastFinishedEventWhenAnotherEventInProgress(
           "Cannot modify assignments for a finished event with subsequent events in progress.");
     }
+  }
+
+  @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
+  public void executeDeleteAssignmentLogic(UUID assignmentId)
+      throws EntityNotFoundException,
+          ChangeInAssignmentsOfPastEventException,
+          AssignChangeLastFinishedEventWhenAnotherEventInProgress {
+    Assignment assignment = getAssignmentById(assignmentId);
+    Event event = assignment.getEvent();
+    checkWhetherEventAssignmentsCanBeAltered(event);
+    Apartment apartment = assignment.getTask().getApartment();
+    assignmentRepository.delete(assignment);
+    event.getAssignments().remove(assignment);
+    workflowService.calculateApartmentState(apartment.getId());
   }
 
   @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)

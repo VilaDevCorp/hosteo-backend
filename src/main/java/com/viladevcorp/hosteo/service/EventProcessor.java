@@ -163,6 +163,15 @@ public class EventProcessor {
   }
 
   @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
+  public void executeDeleteEventLogic(UUID eventId) throws EntityNotFoundException {
+    Event event = getEventById(eventId);
+    UUID apartmentId = event.getApartment().getId();
+    eventRepository.delete(event);
+    event.getApartment().getEvents().remove(event);
+    workflowService.calculateApartmentState(apartmentId);
+  }
+
+  @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
   public Event executeUpdateStateLogic(UUID eventId, EventState state)
       throws EntityNotFoundException,
           PrevOfInProgressCannotBePendingOrInProgress,

@@ -27,7 +27,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.viladevcorp.hosteo.common.BaseControllerTest;
 import com.viladevcorp.hosteo.common.TestUtils;
 import com.viladevcorp.hosteo.model.dto.AssignmentDto;
-import com.viladevcorp.hosteo.model.dto.AssignmentUpdateError;
+import com.viladevcorp.hosteo.model.dto.AssignmentOperationError;
 import com.viladevcorp.hosteo.model.types.AssignmentState;
 import com.viladevcorp.hosteo.utils.ApiResponse;
 import com.viladevcorp.hosteo.utils.CodeErrors;
@@ -702,9 +702,9 @@ class AssignmentControllerTest extends BaseControllerTest {
               .getResponse()
               .getContentAsString();
 
-      TypeReference<ApiResponse<List<AssignmentUpdateError>>> typeReference =
+      TypeReference<ApiResponse<List<AssignmentOperationError>>> typeReference =
           new TypeReference<>() {};
-      ApiResponse<List<AssignmentUpdateError>> result =
+      ApiResponse<List<AssignmentOperationError>> result =
           objectMapper.readValue(resultString, typeReference);
       assertNotNull(result.getData());
       assertEquals(1, result.getData().size());

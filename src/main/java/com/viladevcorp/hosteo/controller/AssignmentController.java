@@ -5,7 +5,7 @@ import com.viladevcorp.hosteo.model.Assignment;
 import com.viladevcorp.hosteo.model.Page;
 import com.viladevcorp.hosteo.model.PageMetadata;
 import com.viladevcorp.hosteo.model.dto.AssignmentDto;
-import com.viladevcorp.hosteo.model.dto.AssignmentUpdateError;
+import com.viladevcorp.hosteo.model.dto.AssignmentOperationError;
 import com.viladevcorp.hosteo.model.dto.AssignmentWithNextEventDto;
 import com.viladevcorp.hosteo.model.forms.AssignmentCreateForm;
 import com.viladevcorp.hosteo.model.forms.AssignmentSearchForm;
@@ -137,12 +137,23 @@ public class AssignmentController {
   }
 
   @PatchMapping("/assignments/state/{state}")
-  public ResponseEntity<ApiResponse<List<AssignmentUpdateError>>> updateBulkAssignmentState(
+  public ResponseEntity<ApiResponse<List<AssignmentOperationError>>> updateBulkAssignmentState(
       @RequestBody Set<UUID> assignmentIds, @PathVariable AssignmentState state) {
     log.info("[AssignmentController.updateBulkAssignmentState] - Updating assignments");
-    List<AssignmentUpdateError> result =
+    List<AssignmentOperationError> result =
         assignmentService.updateBulkAssignmentsState(assignmentIds, state);
     log.info("[AssignmentController.updateBulkAssignmentState] - Assignments updated successfully");
+    return ResponseEntity.ok().body(new ApiResponse<>(result));
+  }
+
+  @DeleteMapping("/assignments")
+  public ResponseEntity<ApiResponse<List<AssignmentOperationError>>> deleteBulkAssignments(
+      @RequestBody Set<UUID> assignmentIds) {
+    log.info(
+        "[AssignmentController.deleteBulkAssignments] - Deleting assignments with ids: {}",
+        assignmentIds);
+    List<AssignmentOperationError> result = assignmentService.deleteBulkAssignments(assignmentIds);
+    log.info("[AssignmentController.deleteBulkAssignments] - Assignments deleted successfully");
     return ResponseEntity.ok().body(new ApiResponse<>(result));
   }
 

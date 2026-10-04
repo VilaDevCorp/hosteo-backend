@@ -2,7 +2,7 @@ package com.viladevcorp.hosteo.service;
 
 import com.viladevcorp.hosteo.exceptions.*;
 import com.viladevcorp.hosteo.model.*;
-import com.viladevcorp.hosteo.model.dto.AssignmentUpdateError;
+import com.viladevcorp.hosteo.model.dto.AssignmentOperationError;
 import com.viladevcorp.hosteo.model.dto.AssignmentWithNextEventDto;
 import com.viladevcorp.hosteo.model.dto.EventDto;
 import com.viladevcorp.hosteo.model.forms.AssignmentCreateForm;
@@ -147,10 +147,10 @@ public class AssignmentService {
     return assignmentProcessor.executeUpdateAssignmentState(assignment, newState);
   }
 
-  public List<AssignmentUpdateError> updateBulkAssignmentsState(
+  public List<AssignmentOperationError> updateBulkAssignmentsState(
       Set<UUID> assignmentIds, AssignmentState newState) {
 
-    List<AssignmentUpdateError> errors = new ArrayList<>();
+    List<AssignmentOperationError> errors = new ArrayList<>();
 
     // Retrieve the assignments from DB
     List<Assignment> assignments = null;
@@ -163,32 +163,59 @@ public class AssignmentService {
         // Call the method that starts a new transaction for each assignment.
         assignmentProcessor.executeUpdateAssignmentState(assignment, newState);
       } catch (EntityNotFoundException e) {
-        errors.add(new AssignmentUpdateError(assignment, e.getMessage()));
+        errors.add(new AssignmentOperationError(assignment, e.getMessage()));
       } catch (DuplicatedEventForTaskException e) {
-        errors.add(new AssignmentUpdateError(assignment, CodeErrors.DUPLICATED_EVENT_FOR_TASK));
+        errors.add(new AssignmentOperationError(assignment, CodeErrors.DUPLICATED_EVENT_FOR_TASK));
       } catch (NotAvailableDatesException e) {
-        errors.add(new AssignmentUpdateError(assignment, CodeErrors.NOT_AVAILABLE_DATES));
+        errors.add(new AssignmentOperationError(assignment, CodeErrors.NOT_AVAILABLE_DATES));
       } catch (CompleteTaskOnNotFinishedEventException e) {
         errors.add(
-            new AssignmentUpdateError(assignment, CodeErrors.COMPLETE_TASK_ON_NOT_FINISHED_EVENT));
+            new AssignmentOperationError(assignment, CodeErrors.COMPLETE_TASK_ON_NOT_FINISHED_EVENT));
       } catch (ChangeInAssignmentsOfPastEventException e) {
         errors.add(
-            new AssignmentUpdateError(assignment, CodeErrors.CHANGE_IN_ASSIGNMENTS_OF_PAST_EVENT));
+            new AssignmentOperationError(assignment, CodeErrors.CHANGE_IN_ASSIGNMENTS_OF_PAST_EVENT));
       } catch (AssignChangeLastFinishedEventWhenAnotherEventInProgress e) {
         errors.add(
-            new AssignmentUpdateError(
+            new AssignmentOperationError(
                 assignment,
                 CodeErrors.ASSIGN_CHANGE_LAST_FINISHED_EVENT_ANOTHER_EVENT_IN_PROGRESS));
       } catch (AssignmentEndsAfterNextEventStarts e) {
         errors.add(
-            new AssignmentUpdateError(
+            new AssignmentOperationError(
                 assignment, CodeErrors.ASSIGNMENT_ENDS_AFTER_NEXT_EVENT_STARTS));
       } catch (AssignmentStartsBeforeEventEnds e) {
         errors.add(
-            new AssignmentUpdateError(assignment, CodeErrors.ASSIGNMENT_STARTS_BEFORE_EVENT_ENDS));
+            new AssignmentOperationError(assignment, CodeErrors.ASSIGNMENT_STARTS_BEFORE_EVENT_ENDS));
       } catch (Exception e) {
         // Catch any other exception to prevent the main loop from stopping.
-        errors.add(new AssignmentUpdateError(assignment, e.getMessage()));
+        errors.add(new AssignmentOperationError(assignment, e.getMessage()));
+      }
+    }
+    return errors;
+  }
+
+  public List<AssignmentOperationError> deleteBulkAssignments(Set<UUID> assignmentIds) {
+    List<AssignmentOperationError> errors = new ArrayList<>();
+
+    List<Assignment> assignments =
+        assignmentRepository.findInIdsAndCreatedByUsername(assignmentIds, AuthUtils.getUsername());
+
+    for (Assignment assignment : assignments) {
+      try {
+        assignmentProcessor.executeDeleteAssignmentLogic(assignment.getId());
+      } catch (EntityNotFoundException e) {
+        errors.add(new AssignmentOperationError(assignment, e.getMessage()));
+      } catch (ChangeInAssignmentsOfPastEventException e) {
+        errors.add(
+            new AssignmentOperationError(
+                assignment, CodeErrors.CHANGE_IN_ASSIGNMENTS_OF_PAST_EVENT));
+      } catch (AssignChangeLastFinishedEventWhenAnotherEventInProgress e) {
+        errors.add(
+            new AssignmentOperationError(
+                assignment,
+                CodeErrors.ASSIGN_CHANGE_LAST_FINISHED_EVENT_ANOTHER_EVENT_IN_PROGRESS));
+      } catch (Exception e) {
+        errors.add(new AssignmentOperationError(assignment, e.getMessage()));
       }
     }
     return errors;

@@ -8,9 +8,9 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class EventUpdateError {
+public class EventOperationError {
 
-  public EventUpdateError(Event event, String error) {
+  public EventOperationError(Event event, String error) {
     this.event = event == null ? null : event.toDto();
     this.error = error;
   }
