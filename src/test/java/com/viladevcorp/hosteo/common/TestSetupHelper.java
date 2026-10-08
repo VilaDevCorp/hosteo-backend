@@ -45,7 +45,7 @@ public class TestSetupHelper {
 
   @Autowired AssignmentRepository assignmentRepository;
 
-  @Autowired ImpBookingRepository impBookingRepository;
+  @Autowired FailedImportedEventRepository importedEventRepository;
 
   private List<User> testUsers;
 
@@ -81,7 +81,7 @@ public class TestSetupHelper {
   }
 
   public void deleteAll() {
-    impBookingRepository.deleteAll();
+    importedEventRepository.deleteAll();
     assignmentRepository.deleteAll();
     taskRepository.deleteAll();
     templateRepository.deleteAll();
@@ -490,7 +490,7 @@ public class TestSetupHelper {
     assignmentRepository.deleteAll();
     eventRepository.deleteAll();
     apartmentRepository.deleteAll();
-    impBookingRepository.deleteAll();
+    importedEventRepository.deleteAll();
     createTestImportApartments();
   }
 

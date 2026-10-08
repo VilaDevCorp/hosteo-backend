@@ -19,6 +19,7 @@ public class CodeErrors {
 
   public static final String DUPLICATED_EVENT_FOR_TASK = "DUPLICATED_EVENT_FOR_TASK";
   public static final String NOT_AVAILABLE_DATES = "NOT_AVAILABLE_DATES";
+  public static final String UNRECOGNIZED_APARTMENT_ID = "UNRECOGNIZED_APARTMENT_ID";
   public static final String COMPLETE_TASK_ON_NOT_FINISHED_EVENT =
       "COMPLETE_TASK_ON_NOT_FINISHED_EVENT";
   public static final String NEXT_OF_PENDING_CANNOT_BE_INPROGRESS_OR_FINISHED =

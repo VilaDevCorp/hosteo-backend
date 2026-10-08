@@ -12,7 +12,7 @@ import com.viladevcorp.hosteo.model.types.EventState;
 import com.viladevcorp.hosteo.repository.ApartmentRepository;
 import com.viladevcorp.hosteo.repository.AssignmentRepository;
 import com.viladevcorp.hosteo.repository.EventRepository;
-import com.viladevcorp.hosteo.repository.ImpBookingRepository;
+import com.viladevcorp.hosteo.repository.FailedImportedEventRepository;
 import com.viladevcorp.hosteo.repository.TaskRepository;
 import com.viladevcorp.hosteo.utils.AuthUtils;
 import com.viladevcorp.hosteo.utils.ServiceUtils;
@@ -38,7 +38,7 @@ public class ApartmentService {
   private final AssignmentRepository assignmentRepository;
   private final EventRepository eventRepository;
   private final TaskRepository taskRepository;
-  private final ImpBookingRepository impBookingRepository;
+  private final FailedImportedEventRepository importedEventRepository;
 
   @Autowired
   public ApartmentService(
@@ -46,12 +46,12 @@ public class ApartmentService {
       AssignmentRepository assignmentRepository,
       EventRepository eventRepository,
       TaskRepository taskRepository,
-      ImpBookingRepository impBookingRepository) {
+      FailedImportedEventRepository importedEventRepository) {
     this.apartmentRepository = apartmentRepository;
     this.assignmentRepository = assignmentRepository;
     this.eventRepository = eventRepository;
     this.taskRepository = taskRepository;
-    this.impBookingRepository = impBookingRepository;
+    this.importedEventRepository = importedEventRepository;
   }
 
   public Apartment createApartment(ApartmentCreateForm form) {
@@ -142,11 +142,11 @@ public class ApartmentService {
     String username = AuthUtils.getUsername();
     UUID apartmentId = apartment.getId();
 
-    // Ordered subtree purge: assignments -> imp_bookings -> events -> tasks -> apartment.
-    // DB has CASCADE for apartment->events / apartment->tasks / apartment->imp_bookings
+    // Ordered subtree purge: assignments -> imported_events -> events -> tasks -> apartment.
+    // DB has CASCADE for apartment->events / apartment->tasks / apartment->imported_events
     // and event->assignments, but explicit ordering avoids mixed CASCADE/RESTRICT issues.
     assignmentRepository.deleteByApartmentId(apartmentId, username);
-    impBookingRepository.deleteByApartmentId(apartmentId, username);
+    importedEventRepository.deleteByApartmentId(apartmentId, username);
     eventRepository.deleteByApartmentId(apartmentId, username);
     taskRepository.deleteByApartmentId(apartmentId, username);
     apartmentRepository.delete(apartment);

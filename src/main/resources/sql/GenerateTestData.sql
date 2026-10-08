@@ -99,7 +99,7 @@ BEGIN
     -- DATA DELETION
     -- ---------------------------------
     DELETE FROM assignments;
-    DELETE FROM imp_bookings;
+    DELETE FROM imported_events;
     DELETE FROM templates;
     DELETE FROM tasks;
     DELETE FROM events;
