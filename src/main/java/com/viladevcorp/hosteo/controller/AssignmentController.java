@@ -7,6 +7,7 @@ import com.viladevcorp.hosteo.model.PageMetadata;
 import com.viladevcorp.hosteo.model.dto.AssignmentDto;
 import com.viladevcorp.hosteo.model.dto.AssignmentOperationError;
 import com.viladevcorp.hosteo.model.dto.AssignmentWithNextEventDto;
+import com.viladevcorp.hosteo.model.dto.BulkOperationResult;
 import com.viladevcorp.hosteo.model.forms.AssignmentCreateForm;
 import com.viladevcorp.hosteo.model.forms.AssignmentSearchForm;
 import com.viladevcorp.hosteo.model.forms.AssignmentUpdateForm;
@@ -141,22 +142,24 @@ public class AssignmentController {
   }
 
   @PatchMapping("/assignments/state/{state}")
-  public ResponseEntity<ApiResponse<List<AssignmentOperationError>>> updateBulkAssignmentState(
-      @RequestBody Set<UUID> assignmentIds, @PathVariable AssignmentState state) {
+  public ResponseEntity<ApiResponse<BulkOperationResult<AssignmentOperationError>>>
+      updateBulkAssignmentState(
+          @RequestBody Set<UUID> assignmentIds, @PathVariable AssignmentState state) {
     log.info("[AssignmentController.updateBulkAssignmentState] - Updating assignments");
-    List<AssignmentOperationError> result =
+    BulkOperationResult<AssignmentOperationError> result =
         assignmentService.updateBulkAssignmentsState(assignmentIds, state);
     log.info("[AssignmentController.updateBulkAssignmentState] - Assignments updated successfully");
     return ResponseEntity.ok().body(new ApiResponse<>(result));
   }
 
   @DeleteMapping("/assignments")
-  public ResponseEntity<ApiResponse<List<AssignmentOperationError>>> deleteBulkAssignments(
-      @RequestBody Set<UUID> assignmentIds) {
+  public ResponseEntity<ApiResponse<BulkOperationResult<AssignmentOperationError>>>
+      deleteBulkAssignments(@RequestBody Set<UUID> assignmentIds) {
     log.info(
         "[AssignmentController.deleteBulkAssignments] - Deleting assignments with ids: {}",
         assignmentIds);
-    List<AssignmentOperationError> result = assignmentService.deleteBulkAssignments(assignmentIds);
+    BulkOperationResult<AssignmentOperationError> result =
+        assignmentService.deleteBulkAssignments(assignmentIds);
     log.info("[AssignmentController.deleteBulkAssignments] - Assignments deleted successfully");
     return ResponseEntity.ok().body(new ApiResponse<>(result));
   }

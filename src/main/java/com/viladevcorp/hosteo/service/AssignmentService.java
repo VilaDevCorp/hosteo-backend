@@ -3,6 +3,7 @@ package com.viladevcorp.hosteo.service;
 import com.viladevcorp.hosteo.exceptions.*;
 import com.viladevcorp.hosteo.model.*;
 import com.viladevcorp.hosteo.model.dto.AssignmentOperationError;
+import com.viladevcorp.hosteo.model.dto.BulkOperationResult;
 import com.viladevcorp.hosteo.model.dto.AssignmentWithNextEventDto;
 import com.viladevcorp.hosteo.model.dto.EventDto;
 import com.viladevcorp.hosteo.model.forms.AssignmentCreateForm;
@@ -165,10 +166,11 @@ public class AssignmentService {
     return assignmentProcessor.executeUpdateAssignmentState(assignment, newState);
   }
 
-  public List<AssignmentOperationError> updateBulkAssignmentsState(
+  public BulkOperationResult<AssignmentOperationError> updateBulkAssignmentsState(
       Set<UUID> assignmentIds, AssignmentState newState) {
 
     List<AssignmentOperationError> errors = new ArrayList<>();
+    int successCount = 0;
 
     // Retrieve the assignments from DB
     List<Assignment> assignments = null;
@@ -180,6 +182,7 @@ public class AssignmentService {
       try {
         // Call the method that starts a new transaction for each assignment.
         assignmentProcessor.executeUpdateAssignmentState(assignment, newState);
+        successCount++;
       } catch (EntityNotFoundException e) {
         errors.add(new AssignmentOperationError(assignment, e.getMessage()));
       } catch (DuplicatedEventForTaskException e) {
@@ -209,11 +212,13 @@ public class AssignmentService {
         errors.add(new AssignmentOperationError(assignment, e.getMessage()));
       }
     }
-    return errors;
+    return new BulkOperationResult<>(successCount, errors);
   }
 
-  public List<AssignmentOperationError> deleteBulkAssignments(Set<UUID> assignmentIds) {
+  public BulkOperationResult<AssignmentOperationError> deleteBulkAssignments(
+      Set<UUID> assignmentIds) {
     List<AssignmentOperationError> errors = new ArrayList<>();
+    int successCount = 0;
 
     List<Assignment> assignments =
         assignmentRepository.findInIdsAndCreatedByUsername(assignmentIds, AuthUtils.getUsername());
@@ -221,6 +226,7 @@ public class AssignmentService {
     for (Assignment assignment : assignments) {
       try {
         assignmentProcessor.executeDeleteAssignmentLogic(assignment.getId());
+        successCount++;
       } catch (EntityNotFoundException e) {
         errors.add(new AssignmentOperationError(assignment, e.getMessage()));
       } catch (ChangeInAssignmentsOfPastEventException e) {
@@ -236,7 +242,7 @@ public class AssignmentService {
         errors.add(new AssignmentOperationError(assignment, e.getMessage()));
       }
     }
-    return errors;
+    return new BulkOperationResult<>(successCount, errors);
   }
 
   public Assignment getAssignmentById(UUID id) throws EntityNotFoundException {

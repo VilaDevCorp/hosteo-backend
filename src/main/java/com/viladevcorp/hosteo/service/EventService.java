@@ -2,6 +2,7 @@ package com.viladevcorp.hosteo.service;
 
 import com.viladevcorp.hosteo.exceptions.*;
 import com.viladevcorp.hosteo.model.*;
+import com.viladevcorp.hosteo.model.dto.BulkOperationResult;
 import com.viladevcorp.hosteo.model.dto.EventDto;
 import com.viladevcorp.hosteo.model.dto.EventOperationError;
 import com.viladevcorp.hosteo.model.dto.EventWithAssignmentsAndNextEventDto;
@@ -112,9 +113,11 @@ public class EventService {
     return eventProcessor.executeUpdateStateLogic(eventId, state);
   }
 
-  public List<EventOperationError> updateBulkEventState(Set<UUID> eventIds, EventState state) {
+  public BulkOperationResult<EventOperationError> updateBulkEventState(
+      Set<UUID> eventIds, EventState state) {
 
     List<EventOperationError> errors = new ArrayList<>();
+    int successCount = 0;
 
     // Retrieve the events from DB
     List<Event> events =
@@ -125,6 +128,7 @@ public class EventService {
       try {
         // Call the method that starts a new transaction for each event.
         eventProcessor.executeUpdateStateLogic(event.getId(), state);
+        successCount++;
       } catch (NextOfInProgressCannotBeFinishedOrInProgress e) {
         errors.add(
             new EventOperationError(
@@ -148,11 +152,12 @@ public class EventService {
         errors.add(new EventOperationError(event, e.getMessage()));
       }
     }
-    return errors;
+    return new BulkOperationResult<>(successCount, errors);
   }
 
-  public List<EventOperationError> deleteBulkEvents(Set<UUID> eventIds) {
+  public BulkOperationResult<EventOperationError> deleteBulkEvents(Set<UUID> eventIds) {
     List<EventOperationError> errors = new ArrayList<>();
+    int successCount = 0;
 
     List<Event> events =
         eventRepository.findInIdsAndCreatedByUsername(eventIds, AuthUtils.getUsername());
@@ -160,13 +165,14 @@ public class EventService {
     for (Event event : events) {
       try {
         eventProcessor.executeDeleteEventLogic(event.getId());
+        successCount++;
       } catch (EntityNotFoundException e) {
         errors.add(new EventOperationError(event, e.getMessage()));
       } catch (Exception e) {
         errors.add(new EventOperationError(event, e.getMessage()));
       }
     }
-    return errors;
+    return new BulkOperationResult<>(successCount, errors);
   }
 
   public Event getEventById(UUID id) throws EntityNotFoundException {

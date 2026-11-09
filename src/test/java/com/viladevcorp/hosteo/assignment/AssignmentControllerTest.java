@@ -28,6 +28,7 @@ import com.viladevcorp.hosteo.common.BaseControllerTest;
 import com.viladevcorp.hosteo.common.TestUtils;
 import com.viladevcorp.hosteo.model.dto.AssignmentDto;
 import com.viladevcorp.hosteo.model.dto.AssignmentOperationError;
+import com.viladevcorp.hosteo.model.dto.BulkOperationResult;
 import com.viladevcorp.hosteo.model.types.AssignmentState;
 import com.viladevcorp.hosteo.utils.ApiResponse;
 import com.viladevcorp.hosteo.utils.CodeErrors;
@@ -702,14 +703,16 @@ class AssignmentControllerTest extends BaseControllerTest {
               .getResponse()
               .getContentAsString();
 
-      TypeReference<ApiResponse<List<AssignmentOperationError>>> typeReference =
+      TypeReference<ApiResponse<BulkOperationResult<AssignmentOperationError>>> typeReference =
           new TypeReference<>() {};
-      ApiResponse<List<AssignmentOperationError>> result =
+      ApiResponse<BulkOperationResult<AssignmentOperationError>> result =
           objectMapper.readValue(resultString, typeReference);
       assertNotNull(result.getData());
-      assertEquals(1, result.getData().size());
+      assertEquals(0, result.getData().getSuccessCount());
+      assertEquals(1, result.getData().getErrors().size());
       assertEquals(
-          CodeErrors.COMPLETE_TASK_ON_NOT_FINISHED_EVENT, result.getData().get(0).getError());
+          CodeErrors.COMPLETE_TASK_ON_NOT_FINISHED_EVENT,
+          result.getData().getErrors().get(0).getError());
 
       Assignment persisted =
           assignmentRepository.findById(assignmentToUpdate.getId()).orElse(null);

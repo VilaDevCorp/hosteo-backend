@@ -170,21 +170,23 @@ public class EventController {
   }
 
   @PatchMapping("/events/state/{state}")
-  public ResponseEntity<ApiResponse<List<EventOperationError>>> updateEventsState(
+  public ResponseEntity<ApiResponse<BulkOperationResult<EventOperationError>>> updateEventsState(
       @RequestBody Set<UUID> eventIds, @PathVariable EventState state) {
     log.info("[EventController.updateEventsState] - Updating events state with ids: {}", eventIds);
-    List<EventOperationError> updateBulkErrors = eventService.updateBulkEventState(eventIds, state);
+    BulkOperationResult<EventOperationError> updateBulkResult =
+        eventService.updateBulkEventState(eventIds, state);
     log.info("[EventController.updateEventsState] - Events state updated  successfully");
-    return ResponseEntity.ok().body(new ApiResponse<>(updateBulkErrors));
+    return ResponseEntity.ok().body(new ApiResponse<>(updateBulkResult));
   }
 
   @DeleteMapping("/events")
-  public ResponseEntity<ApiResponse<List<EventOperationError>>> deleteBulkEvents(
+  public ResponseEntity<ApiResponse<BulkOperationResult<EventOperationError>>> deleteBulkEvents(
       @RequestBody Set<UUID> eventIds) {
     log.info("[EventController.deleteBulkEvents] - Deleting events with ids: {}", eventIds);
-    List<EventOperationError> deleteBulkErrors = eventService.deleteBulkEvents(eventIds);
+    BulkOperationResult<EventOperationError> deleteBulkResult =
+        eventService.deleteBulkEvents(eventIds);
     log.info("[EventController.deleteBulkEvents] - Events deleted successfully");
-    return ResponseEntity.ok().body(new ApiResponse<>(deleteBulkErrors));
+    return ResponseEntity.ok().body(new ApiResponse<>(deleteBulkResult));
   }
 
   @GetMapping("/event/{id}")
