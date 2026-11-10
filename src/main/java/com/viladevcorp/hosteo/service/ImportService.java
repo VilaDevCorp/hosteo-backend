@@ -52,15 +52,17 @@ public class ImportService {
     this.eventProcessor = eventProcessor;
   }
 
-  public static final int AIRBNB_START_DATE_POSITION = 4;
-  public static final int AIRBNB_END_DATE_POSITION = 5;
-  public static final int AIRBNB_GUEST_POSITION = 7;
-  public static final int AIRBNB_APARTMENT_POSITION = 8;
+  public static final String AIRBNB_START_DATE_HEADER = "Start date";
+  public static final String AIRBNB_END_DATE_HEADER = "End date";
+  public static final String AIRBNB_GUEST_NAME_HEADER = "Guest name";
+  public static final String AIRBNB_GUEST_HEADER = "Guest";
+  public static final String AIRBNB_APARTMENT_HEADER = "Listing";
 
   public static final String AIRBNB_CHECKIN_TIME = "15:00";
   public static final String AIRBNB_CHECKOUT_TIME = "11:00";
 
-  public static final String AIRBNB_DATE_FORMAT = "MM/dd/yyyy HH:mm";
+  // Airbnb exports both zero-padded (MM/dd/yyyy) and non-padded (M/d/yyyy) dates.
+  public static final String AIRBNB_DATE_FORMAT = "M/d/yyyy HH:mm";
   public static final char AIRBNB_SEPARATOR = ',';
 
   public static final int BOOKING_START_DATE_POSITION = 4;
@@ -262,18 +264,31 @@ public class ImportService {
   private List<ImportCandidate> parseAirbnb(File importFile) throws IOException, CsvException {
     try (BufferedReader br = Files.newBufferedReader(importFile.toPath(), StandardCharsets.UTF_8)) {
       CSVParser parser = new CSVParserBuilder().withSeparator(AIRBNB_SEPARATOR).build();
-      try (CSVReader csvReader =
-          new CSVReaderBuilder(br).withSkipLines(1).withCSVParser(parser).build()) {
+      try (CSVReader csvReader = new CSVReaderBuilder(br).withCSVParser(parser).build()) {
         Map<String, Apartment> apartmentCache = new HashMap<>();
         DateTimeFormatter dateFormatter =
             DateTimeFormatter.ofPattern(AIRBNB_DATE_FORMAT).withZone(ZoneOffset.UTC);
 
-        return csvReader.readAll().stream()
+        List<String[]> lines = csvReader.readAll();
+        if (lines.isEmpty()) {
+          return List.of();
+        }
+
+        // Airbnb ships different export layouts (e.g. transaction history vs. reservations list),
+        // so resolve columns by header name instead of relying on a fixed position.
+        Map<String, Integer> headerIndex = headerIndex(lines.get(0));
+        int startDatePosition = findColumn(headerIndex, AIRBNB_START_DATE_HEADER);
+        int endDatePosition = findColumn(headerIndex, AIRBNB_END_DATE_HEADER);
+        int guestPosition = findColumn(headerIndex, AIRBNB_GUEST_NAME_HEADER, AIRBNB_GUEST_HEADER);
+        int apartmentPosition = findColumn(headerIndex, AIRBNB_APARTMENT_HEADER);
+
+        return lines.stream()
+            .skip(1)
             .map(
                 line -> {
                   Apartment apartment =
                       apartmentCache.computeIfAbsent(
-                          line[AIRBNB_APARTMENT_POSITION],
+                          line[apartmentPosition],
                           airbnbId ->
                               apartmentRepository
                                   .findByAirbnbIdAndCreatedByUsername(
@@ -283,16 +298,16 @@ public class ImportService {
                   Instant startDate =
                       Instant.from(
                           dateFormatter.parse(
-                              line[AIRBNB_START_DATE_POSITION] + " " + AIRBNB_CHECKIN_TIME));
+                              line[startDatePosition] + " " + AIRBNB_CHECKIN_TIME));
                   Instant endDate =
                       Instant.from(
                           dateFormatter.parse(
-                              line[AIRBNB_END_DATE_POSITION] + " " + AIRBNB_CHECKOUT_TIME));
+                              line[endDatePosition] + " " + AIRBNB_CHECKOUT_TIME));
 
                   return new ImportCandidate(
                       null,
                       apartment,
-                      line[AIRBNB_GUEST_POSITION],
+                      line[guestPosition],
                       startDate,
                       endDate,
                       EventSource.AIRBNB);
@@ -300,6 +315,29 @@ public class ImportService {
             .toList();
       }
     }
+  }
+
+  private static Map<String, Integer> headerIndex(String[] header) {
+    Map<String, Integer> index = new HashMap<>();
+    for (int i = 0; i < header.length; i++) {
+      String name = header[i];
+      if (!name.isEmpty() && name.charAt(0) == '\uFEFF') {
+        name = name.substring(1);
+      }
+      index.putIfAbsent(name.trim(), i);
+    }
+    return index;
+  }
+
+  private static int findColumn(Map<String, Integer> headerIndex, String... names) {
+    for (String name : names) {
+      Integer position = headerIndex.get(name);
+      if (position != null) {
+        return position;
+      }
+    }
+    throw new IllegalArgumentException(
+        "Missing expected CSV column: " + String.join(" or ", names));
   }
 
   private List<ImportCandidate> parseBooking(File importFile) throws IOException, CsvException {

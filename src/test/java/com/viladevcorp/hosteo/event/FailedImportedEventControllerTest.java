@@ -19,6 +19,7 @@ import com.viladevcorp.hosteo.utils.CodeErrors;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -82,6 +83,36 @@ class FailedImportedEventControllerTest extends BaseControllerTest {
       assertEquals(1, result.getFailedEvents().size());
       assertEquals(CodeErrors.UNRECOGNIZED_APARTMENT_ID, result.getFailedEvents().get(0).getError());
       assertTrue(result.getFailedEvents().get(0).getName().startsWith("Oliver Dvorsk"));
+    }
+
+    @Test
+    void When_UploadAirbnbReservationsExport_Ok() throws Exception {
+      TestUtils.injectUserSession(ACTIVE_USER_USERNAME_1, userRepository);
+
+      String resultString =
+          mockMvc
+              .perform(
+                  multipart("/api/imported-events/upload")
+                      .file(fileFor("src/test/resources/import_airbnb_reservations.csv"))
+                      .param("source", "AIRBNB"))
+              .andExpect(status().isOk())
+              .andReturn()
+              .getResponse()
+              .getContentAsString();
+
+      ImportResultDto result =
+          objectMapper
+              .readValue(
+                  resultString, new TypeReference<ApiResponse<ImportResultDto>>() {})
+              .getData();
+      assertEquals(3, result.getSuccessCount());
+      assertEquals(1, result.getFailedEvents().size());
+
+      FailedImportedEventDto failed = result.getFailedEvents().get(0);
+      assertEquals(CodeErrors.UNRECOGNIZED_APARTMENT_ID, failed.getError());
+      assertEquals("Maria Petrosyan", failed.getName());
+      assertEquals(Instant.parse("2026-11-28T15:00:00Z"), failed.getStartDate());
+      assertEquals(Instant.parse("2026-12-01T11:00:00Z"), failed.getEndDate());
     }
   }
 
