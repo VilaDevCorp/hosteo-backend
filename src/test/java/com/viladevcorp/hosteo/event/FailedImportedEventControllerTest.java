@@ -111,8 +111,65 @@ class FailedImportedEventControllerTest extends BaseControllerTest {
       FailedImportedEventDto failed = result.getFailedEvents().get(0);
       assertEquals(CodeErrors.UNRECOGNIZED_APARTMENT_ID, failed.getError());
       assertEquals("Maria Petrosyan", failed.getName());
-      assertEquals(Instant.parse("2026-11-28T15:00:00Z"), failed.getStartDate());
-      assertEquals(Instant.parse("2026-12-01T11:00:00Z"), failed.getEndDate());
+      // November is CET (UTC+1): 15:00 check-in / 11:00 check-out local time.
+      assertEquals(Instant.parse("2026-11-28T14:00:00Z"), failed.getStartDate());
+      assertEquals(Instant.parse("2026-12-01T10:00:00Z"), failed.getEndDate());
+    }
+
+    @Test
+    void When_UploadAirbnbSummerDates_UsesBratislavaDst() throws Exception {
+      TestUtils.injectUserSession(ACTIVE_USER_USERNAME_1, userRepository);
+
+      String resultString =
+          mockMvc
+              .perform(
+                  multipart("/api/imported-events/upload")
+                      .file(fileFor("src/test/resources/import_airbnb_summer.csv"))
+                      .param("source", "AIRBNB"))
+              .andExpect(status().isOk())
+              .andReturn()
+              .getResponse()
+              .getContentAsString();
+
+      ImportResultDto result =
+          objectMapper
+              .readValue(
+                  resultString, new TypeReference<ApiResponse<ImportResultDto>>() {})
+              .getData();
+      assertEquals(1, result.getFailedEvents().size());
+
+      FailedImportedEventDto failed = result.getFailedEvents().get(0);
+      // July is CEST (UTC+2): 15:00 check-in / 11:00 check-out local time.
+      assertEquals(Instant.parse("2026-07-15T13:00:00Z"), failed.getStartDate());
+      assertEquals(Instant.parse("2026-07-16T09:00:00Z"), failed.getEndDate());
+    }
+
+    @Test
+    void When_UploadAirbnbAcrossDstChange_UsesZoneOfEachDate() throws Exception {
+      TestUtils.injectUserSession(ACTIVE_USER_USERNAME_1, userRepository);
+
+      String resultString =
+          mockMvc
+              .perform(
+                  multipart("/api/imported-events/upload")
+                      .file(fileFor("src/test/resources/import_airbnb_dst_boundary.csv"))
+                      .param("source", "AIRBNB"))
+              .andExpect(status().isOk())
+              .andReturn()
+              .getResponse()
+              .getContentAsString();
+
+      ImportResultDto result =
+          objectMapper
+              .readValue(
+                  resultString, new TypeReference<ApiResponse<ImportResultDto>>() {})
+              .getData();
+      assertEquals(1, result.getFailedEvents().size());
+
+      FailedImportedEventDto failed = result.getFailedEvents().get(0);
+      // DST ends on 2026-10-25, so the start and end dates use different offsets.
+      assertEquals(Instant.parse("2026-10-24T13:00:00Z"), failed.getStartDate());
+      assertEquals(Instant.parse("2026-10-26T10:00:00Z"), failed.getEndDate());
     }
   }
 

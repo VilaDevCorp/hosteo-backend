@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.time.Instant;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import jakarta.persistence.EntityNotFoundException;
@@ -57,6 +57,10 @@ public class ImportService {
   public static final String AIRBNB_GUEST_NAME_HEADER = "Guest name";
   public static final String AIRBNB_GUEST_HEADER = "Guest";
   public static final String AIRBNB_APARTMENT_HEADER = "Listing";
+
+  // CSV exports contain local wall-clock times, so they must be interpreted in the property's
+  // timezone rather than UTC.
+  public static final ZoneId IMPORT_DEFAULT_ZONE = ZoneId.of("Europe/Bratislava");
 
   public static final String AIRBNB_CHECKIN_TIME = "15:00";
   public static final String AIRBNB_CHECKOUT_TIME = "11:00";
@@ -267,7 +271,7 @@ public class ImportService {
       try (CSVReader csvReader = new CSVReaderBuilder(br).withCSVParser(parser).build()) {
         Map<String, Apartment> apartmentCache = new HashMap<>();
         DateTimeFormatter dateFormatter =
-            DateTimeFormatter.ofPattern(AIRBNB_DATE_FORMAT).withZone(ZoneOffset.UTC);
+            DateTimeFormatter.ofPattern(AIRBNB_DATE_FORMAT).withZone(IMPORT_DEFAULT_ZONE);
 
         List<String[]> lines = csvReader.readAll();
         if (lines.isEmpty()) {
@@ -348,7 +352,7 @@ public class ImportService {
         Map<String, Apartment> apartmentCache = new HashMap<>();
         DateTimeFormatter dateFormatter =
             DateTimeFormatter.ofPattern(BOOKING_DATE_FORMAT)
-                .withZone(ZoneOffset.UTC)
+                .withZone(IMPORT_DEFAULT_ZONE)
                 .withLocale(Locale.ENGLISH);
 
         return csvReader.readAll().stream()

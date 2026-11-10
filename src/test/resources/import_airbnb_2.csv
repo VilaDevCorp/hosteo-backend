@@ -1,0 +1,11 @@
+Date,Type,Confirmation code,Booking date,Start date,End date,Nights,Guest,Listing,Details,Reference code,Currency,Amount,Service fee,Cleaning fee,Gross earnings,Occupancy taxes,Earnings year
+11/05/2026,Reservation,HM2D2ZMQFX,10/30/2026,11/04/2026,11/05/2026,1,Oliver Dvorský,air-apt-001,,,EUR,58.20,1.80,0.00,60.00,7.00,
+11/07/2026,Reservation,HMHSANTJHK,09/30/2026,11/06/2026,11/07/2026,1,Alexandra Heinen,air-apt-002,,,EUR,47.14,1.46,0.00,48.60,7.00,
+11/09/2026,Reservation,HMKW4YXKWH,07/16/2026,11/08/2026,11/11/2026,3,Carwyn Bowen,air-apt-002,,,EUR,160.05,4.95,0.00,165.00,21.00,
+11/12/2026,Reservation,HMNH8WQQ3S,07/19/2026,11/11/2026,11/15/2026,4,Julie Smithson,air-apt-002,,,EUR,212.43,6.57,0.00,219.00,27.99,
+11/18/2026,Reservation,HM8AXDT8Q3,06/22/2026,11/17/2026,11/19/2026,2,Carlene Howard,air-apt-002,,,EUR,109.80,4.20,0.00,114.00,14.00,
+11/20/2026,Reservation,HMNFYRTXMZ,10/14/2026,11/19/2026,11/20/2026,1,Vivian Liu,air-apt-002,,,EUR,47.14,1.46,0.00,48.60,7.00,
+11/21/2026,Reservation,HMD8MFWJE3,08/18/2026,11/20/2026,11/21/2026,1,Leo Spanswick,air-apt-002,,,EUR,52.38,1.62,0.00,54.00,7.00,
+11/26/2026,Reservation,HMDN5P5448,10/12/2026,11/25/2026,11/27/2026,2,Anna Janning,air-apt-003,,,EUR,69.84,2.16,0.00,72.00,14.00,
+11/27/2026,Reservation,HMA4J5T4C2,10/30/2026,11/26/2026,11/27/2026,1,Lorenz Schumm,air-apt-004,,,EUR,46.66,1.44,8.00,48.10,7.00,
+12/06/2026,Reservation,HMW24KY9EA,11/04/2026,12/05/2026,12/07/2026,2,Carolina Damiani,air-apt-003,,,EUR,71.86,2.22,0.00,74.08,14.00,
