@@ -3,6 +3,10 @@ spring:
     password: password
     url: jdbc:postgresql://localhost:5436/database
     username: user
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
   application:
     name: hosteo
   jpa:
@@ -31,7 +35,7 @@ spring:
     serialization:
       write-dates-as-timestamps: false
 cors:
-  allowed-origins: http://192.168.1.33:3000
+  allowed-origins: http://192.168.137.1:3000
   allowed-methods: GET,POST,PUT,DELETE,OPTIONS,PATCH
   allowed-headers: Accept,Content-Type,credentials,Content-Length,Accept-Encoding,X-API-CSRF,Authorization
   exposed-headers: Set-Cookie
@@ -57,4 +61,9 @@ auth:
     sameSite: Lax
 frontend:
   url: http://192.168.1.33:3000
+minio:
+  url: ${MINIO_URL:http://localhost:9000}
+  access-key: ${MINIO_ACCESS_KEY:minio}
+  secret-key: ${MINIO_SECRET_KEY:minio123}
+  bucket: ${MINIO_BUCKET:hosteo}
 

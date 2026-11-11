@@ -12,3 +12,8 @@ spring:
 
 mail:
   enabled: false
+minio:
+  url: http://localhost:9000
+  access-key: test
+  secret-key: test
+  bucket: hosteo-test

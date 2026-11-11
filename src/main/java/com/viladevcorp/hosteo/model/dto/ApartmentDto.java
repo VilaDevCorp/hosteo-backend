@@ -2,6 +2,8 @@ package com.viladevcorp.hosteo.model.dto;
 
 import com.viladevcorp.hosteo.model.*;
 import com.viladevcorp.hosteo.model.types.ApartmentState;
+import com.viladevcorp.hosteo.model.types.ImageType;
+import com.viladevcorp.hosteo.utils.ImageUrlResolver;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -17,6 +19,9 @@ public class ApartmentDto extends BaseEntityDto {
       return;
     }
     BeanUtils.copyProperties(apartment, this);
+    this.imageUrl =
+        ImageUrlResolver.resolve(
+            ImageType.APARTMENT, apartment.getId().toString(), apartment.isHasImage());
   }
 
   private String name;
@@ -30,4 +35,6 @@ public class ApartmentDto extends BaseEntityDto {
   private ApartmentState state = ApartmentState.READY;
 
   private boolean visible = true;
+
+  private String imageUrl;
 }

@@ -1,6 +1,8 @@
 package com.viladevcorp.hosteo.controller;
 
 import com.viladevcorp.hosteo.exceptions.EntityHasDependenciesException;
+import com.viladevcorp.hosteo.exceptions.FileTooBigException;
+import com.viladevcorp.hosteo.exceptions.FileTypeNotSupportedException;
 import com.viladevcorp.hosteo.model.Page;
 import com.viladevcorp.hosteo.model.PageMetadata;
 import com.viladevcorp.hosteo.model.Worker;
@@ -11,6 +13,7 @@ import com.viladevcorp.hosteo.model.forms.WorkerUpdateForm;
 import com.viladevcorp.hosteo.service.WorkerService;
 import com.viladevcorp.hosteo.utils.ApiResponse;
 import com.viladevcorp.hosteo.utils.ValidationUtils;
+import io.minio.errors.MinioException;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
@@ -18,6 +21,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -28,7 +32,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @RestController
@@ -144,6 +150,39 @@ public class WorkerController {
       workerService.unhideWorker(id);
       log.info("[WorkerController.unhideWorker] - Worker unhidden");
       return ResponseEntity.ok().body(new ApiResponse<>(null, "Worker unhidden successfully."));
+    } catch (EntityNotFoundException e) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND)
+          .body(new ApiResponse<>(null, e.getMessage()));
+    }
+  }
+
+  @PutMapping(path = "/worker/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public ResponseEntity<ApiResponse<String>> updateWorkerImage(
+      @PathVariable UUID id, @RequestPart(value = "image", required = false) MultipartFile image)
+      throws FileTooBigException, FileTypeNotSupportedException, MinioException {
+    log.info("[WorkerController.updateWorkerImage] - Updating image for worker: {}", id);
+    try {
+      String imageUrl = workerService.updateWorkerImage(id, image);
+      log.info("[WorkerController.updateWorkerImage] - Worker image updated");
+      return ResponseEntity.ok().body(new ApiResponse<>(imageUrl));
+    } catch (EntityNotFoundException e) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND)
+          .body(new ApiResponse<>(null, e.getMessage()));
+    }
+  }
+
+  @GetMapping("/worker/{id}/image")
+  public ResponseEntity<ApiResponse<String>> getWorkerImage(@PathVariable UUID id)
+      throws MinioException {
+    log.info("[WorkerController.getWorkerImage] - Fetching image for worker: {}", id);
+    try {
+      String imageUrl = workerService.getWorkerImageUrl(id);
+      if (imageUrl == null) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(new ApiResponse<>(null, "Worker image not found"));
+      }
+      log.info("[WorkerController.getWorkerImage] - Worker image fetched");
+      return ResponseEntity.ok().body(new ApiResponse<>(imageUrl));
     } catch (EntityNotFoundException e) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(new ApiResponse<>(null, e.getMessage()));

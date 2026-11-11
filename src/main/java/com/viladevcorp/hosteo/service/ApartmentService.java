@@ -1,6 +1,8 @@
 package com.viladevcorp.hosteo.service;
 
 import com.viladevcorp.hosteo.exceptions.EntityHasDependenciesException;
+import com.viladevcorp.hosteo.exceptions.FileTooBigException;
+import com.viladevcorp.hosteo.exceptions.FileTypeNotSupportedException;
 import com.viladevcorp.hosteo.model.Apartment;
 import com.viladevcorp.hosteo.model.PageMetadata;
 import com.viladevcorp.hosteo.model.forms.ApartmentCreateForm;
@@ -9,6 +11,7 @@ import com.viladevcorp.hosteo.model.forms.ApartmentUpdateForm;
 import com.viladevcorp.hosteo.model.types.ApartmentState;
 import com.viladevcorp.hosteo.model.types.AssignmentState;
 import com.viladevcorp.hosteo.model.types.EventState;
+import com.viladevcorp.hosteo.model.types.ImageType;
 import com.viladevcorp.hosteo.repository.ApartmentRepository;
 import com.viladevcorp.hosteo.repository.AssignmentRepository;
 import com.viladevcorp.hosteo.repository.EventRepository;
@@ -16,6 +19,7 @@ import com.viladevcorp.hosteo.repository.FailedImportedEventRepository;
 import com.viladevcorp.hosteo.repository.TaskRepository;
 import com.viladevcorp.hosteo.utils.AuthUtils;
 import com.viladevcorp.hosteo.utils.ServiceUtils;
+import io.minio.errors.MinioException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -23,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -39,6 +44,7 @@ public class ApartmentService {
   private final EventRepository eventRepository;
   private final TaskRepository taskRepository;
   private final FailedImportedEventRepository importedEventRepository;
+  private final MinioService minioService;
 
   @Autowired
   public ApartmentService(
@@ -46,12 +52,14 @@ public class ApartmentService {
       AssignmentRepository assignmentRepository,
       EventRepository eventRepository,
       TaskRepository taskRepository,
-      FailedImportedEventRepository importedEventRepository) {
+      FailedImportedEventRepository importedEventRepository,
+      MinioService minioService) {
     this.apartmentRepository = apartmentRepository;
     this.assignmentRepository = assignmentRepository;
     this.eventRepository = eventRepository;
     this.taskRepository = taskRepository;
     this.importedEventRepository = importedEventRepository;
+    this.minioService = minioService;
   }
 
   public Apartment createApartment(ApartmentCreateForm form) {
@@ -150,5 +158,26 @@ public class ApartmentService {
     eventRepository.deleteByApartmentId(apartmentId, username);
     taskRepository.deleteByApartmentId(apartmentId, username);
     apartmentRepository.delete(apartment);
+    minioService.deleteImage(ImageType.APARTMENT, apartmentId.toString());
+  }
+
+  public String updateApartmentImage(UUID id, MultipartFile image)
+      throws EntityNotFoundException,
+          FileTooBigException,
+          FileTypeNotSupportedException,
+          MinioException {
+    Apartment apartment = getApartmentById(id);
+    String apartmentId = apartment.getId().toString();
+    minioService.updateImage(ImageType.APARTMENT, apartmentId, image);
+    apartment.setHasImage(image != null && !image.isEmpty());
+    apartmentRepository.save(apartment);
+    return apartment.isHasImage()
+        ? minioService.getImageUrl(ImageType.APARTMENT, apartmentId)
+        : null;
+  }
+
+  public String getApartmentImageUrl(UUID id) throws EntityNotFoundException, MinioException {
+    Apartment apartment = getApartmentById(id);
+    return minioService.getImageUrlIfExists(ImageType.APARTMENT, apartment.getId().toString());
   }
 }

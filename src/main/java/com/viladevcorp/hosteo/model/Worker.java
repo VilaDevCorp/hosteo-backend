@@ -39,6 +39,8 @@ public class Worker extends BaseEntity {
 
   @Builder.Default private boolean visible = true;
 
+  @Builder.Default private boolean hasImage = false;
+
   @Override
   public WorkerDto toDto() {
     return new WorkerDto(this);

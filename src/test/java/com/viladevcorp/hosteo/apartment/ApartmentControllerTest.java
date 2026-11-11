@@ -12,23 +12,32 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.viladevcorp.hosteo.common.BaseControllerTest;
 import com.viladevcorp.hosteo.common.TestSetupHelper;
 import com.viladevcorp.hosteo.common.TestUtils;
+import com.viladevcorp.hosteo.exceptions.FileTooBigException;
 import com.viladevcorp.hosteo.model.Apartment;
 import com.viladevcorp.hosteo.model.Page;
 import com.viladevcorp.hosteo.model.forms.ApartmentCreateForm;
 import com.viladevcorp.hosteo.model.forms.ApartmentSearchForm;
 import com.viladevcorp.hosteo.model.forms.ApartmentUpdateForm;
+import com.viladevcorp.hosteo.model.types.ImageType;
 import com.viladevcorp.hosteo.repository.ApartmentRepository;
 import com.viladevcorp.hosteo.repository.UserRepository;
 import com.viladevcorp.hosteo.utils.ApiResponse;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -404,6 +413,113 @@ class ApartmentControllerTest extends BaseControllerTest {
               org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete(
                   "/api/apartment/" + UUID.randomUUID()))
           .andExpect(status().isNotFound());
+    }
+  }
+
+  @Nested
+  @DisplayName("Apartment image")
+  class ApartmentImage {
+    private String apartmentUrl() {
+      return "/api/apartment/" + testSetupHelper.getTestApartments().get(0).getId() + "/image";
+    }
+
+    @Test
+    void When_UpdateApartmentImage_Ok() throws Exception {
+      TestUtils.injectUserSession(ACTIVE_USER_USERNAME_1, userRepository);
+      UUID id = testSetupHelper.getTestApartments().get(0).getId();
+      when(minioService.getImageUrl(eq(ImageType.APARTMENT), eq(id.toString())))
+          .thenReturn("http://minio/apartment");
+      MockMultipartFile image =
+          new MockMultipartFile("image", "a.png", "image/png", new byte[10]);
+
+      String resultString =
+          mockMvc
+              .perform(multipart(HttpMethod.PUT, apartmentUrl()).file(image))
+              .andExpect(status().isOk())
+              .andReturn()
+              .getResponse()
+              .getContentAsString();
+
+      ApiResponse<String> result =
+          objectMapper.readValue(resultString, new TypeReference<ApiResponse<String>>() {});
+      assertEquals("http://minio/apartment", result.getData());
+      assertTrue(apartmentRepository.findById(id).orElseThrow().isHasImage());
+    }
+
+    @Test
+    void When_UpdateApartmentImageWithoutFile_DeletesImage() throws Exception {
+      TestUtils.injectUserSession(ACTIVE_USER_USERNAME_1, userRepository);
+      UUID id = testSetupHelper.getTestApartments().get(0).getId();
+      Apartment apartment = apartmentRepository.findById(id).orElseThrow();
+      apartment.setHasImage(true);
+      apartmentRepository.save(apartment);
+
+      mockMvc
+          .perform(multipart(HttpMethod.PUT, apartmentUrl()))
+          .andExpect(status().isOk());
+
+      assertFalse(apartmentRepository.findById(id).orElseThrow().isHasImage());
+    }
+
+    @Test
+    void When_UpdateApartmentImageTooBig_PayloadTooLarge() throws Exception {
+      TestUtils.injectUserSession(ACTIVE_USER_USERNAME_1, userRepository);
+      doThrow(new FileTooBigException("too big"))
+          .when(minioService)
+          .updateImage(any(), any(), any());
+      MockMultipartFile image =
+          new MockMultipartFile("image", "a.png", "image/png", new byte[10]);
+
+      mockMvc
+          .perform(multipart(HttpMethod.PUT, apartmentUrl()).file(image))
+          .andExpect(status().isPayloadTooLarge());
+    }
+
+    @Test
+    void When_UpdateApartmentImageNotOwned_NotFound() throws Exception {
+      TestUtils.injectUserSession(ACTIVE_USER_USERNAME_2, userRepository);
+      MockMultipartFile image =
+          new MockMultipartFile("image", "a.png", "image/png", new byte[10]);
+
+      mockMvc
+          .perform(multipart(HttpMethod.PUT, apartmentUrl()).file(image))
+          .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void When_GetApartmentImage_Ok() throws Exception {
+      TestUtils.injectUserSession(ACTIVE_USER_USERNAME_1, userRepository);
+      UUID id = testSetupHelper.getTestApartments().get(0).getId();
+      when(minioService.getImageUrlIfExists(ImageType.APARTMENT, id.toString()))
+          .thenReturn("http://minio/apartment");
+
+      String resultString =
+          mockMvc
+              .perform(get(apartmentUrl()))
+              .andExpect(status().isOk())
+              .andReturn()
+              .getResponse()
+              .getContentAsString();
+
+      ApiResponse<String> result =
+          objectMapper.readValue(resultString, new TypeReference<ApiResponse<String>>() {});
+      assertEquals("http://minio/apartment", result.getData());
+    }
+
+    @Test
+    void When_GetApartmentImageNotExists_NotFound() throws Exception {
+      TestUtils.injectUserSession(ACTIVE_USER_USERNAME_1, userRepository);
+      UUID id = testSetupHelper.getTestApartments().get(0).getId();
+      when(minioService.getImageUrlIfExists(ImageType.APARTMENT, id.toString())).thenReturn(null);
+
+      mockMvc.perform(get(apartmentUrl())).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void When_GetApartmentImageNotOwned_NotFound() throws Exception {
+      TestUtils.injectUserSession(ACTIVE_USER_USERNAME_2, userRepository);
+
+      mockMvc.perform(get(apartmentUrl())).andExpect(status().isNotFound());
     }
   }
 }

@@ -52,6 +52,8 @@ public class Apartment extends BaseEntity {
 
   @Builder.Default private boolean visible = true;
 
+  @Builder.Default private boolean hasImage = false;
+
   @OneToMany(mappedBy = "apartment")
   @JsonIgnore
   @Builder.Default

@@ -37,6 +37,8 @@ public class User extends BaseEntity implements UserDetails {
 
   @JsonIgnore private boolean validated = false;
 
+  private boolean hasImage = false;
+
   @OneToMany(mappedBy = "user")
   @JsonIgnore
   Set<ValidationCode> validationCodes = new HashSet<>();

@@ -1,6 +1,8 @@
 package com.viladevcorp.hosteo.model.dto;
 
 import com.viladevcorp.hosteo.model.User;
+import com.viladevcorp.hosteo.model.types.ImageType;
+import com.viladevcorp.hosteo.utils.ImageUrlResolver;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,6 +19,8 @@ public class UserDto extends BaseEntityDto {
 
   boolean validated;
 
+  String imageUrl;
+
   public UserDto(User user) {
     if (user == null) {
       return;
@@ -24,6 +28,8 @@ public class UserDto extends BaseEntityDto {
     this.email = user.getEmail();
     this.username = user.getUsername();
     this.validated = user.isValidated();
+    this.imageUrl =
+        ImageUrlResolver.resolve(ImageType.PROFILE, user.getUsername(), user.isHasImage());
   }
 
   @Override

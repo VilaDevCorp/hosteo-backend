@@ -1,16 +1,20 @@
 package com.viladevcorp.hosteo.service;
 
 import com.viladevcorp.hosteo.exceptions.EntityHasDependenciesException;
+import com.viladevcorp.hosteo.exceptions.FileTooBigException;
+import com.viladevcorp.hosteo.exceptions.FileTypeNotSupportedException;
 import com.viladevcorp.hosteo.model.PageMetadata;
 import com.viladevcorp.hosteo.model.Worker;
 import com.viladevcorp.hosteo.model.forms.WorkerCreateForm;
 import com.viladevcorp.hosteo.model.forms.WorkerSearchForm;
 import com.viladevcorp.hosteo.model.forms.WorkerUpdateForm;
 import com.viladevcorp.hosteo.model.types.AssignmentState;
+import com.viladevcorp.hosteo.model.types.ImageType;
 import com.viladevcorp.hosteo.repository.AssignmentRepository;
 import com.viladevcorp.hosteo.repository.WorkerRepository;
 import com.viladevcorp.hosteo.utils.AuthUtils;
 import com.viladevcorp.hosteo.utils.ServiceUtils;
+import io.minio.errors.MinioException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -21,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Service
@@ -29,11 +34,16 @@ public class WorkerService {
 
   private final WorkerRepository workerRepository;
   private final AssignmentRepository assignmentRepository;
+  private final MinioService minioService;
 
   @Autowired
-  public WorkerService(WorkerRepository workerRepository, AssignmentRepository assignmentRepository) {
+  public WorkerService(
+      WorkerRepository workerRepository,
+      AssignmentRepository assignmentRepository,
+      MinioService minioService) {
     this.workerRepository = workerRepository;
     this.assignmentRepository = assignmentRepository;
+    this.minioService = minioService;
   }
 
   public Worker createWorker(WorkerCreateForm form) {
@@ -112,5 +122,24 @@ public class WorkerService {
           "Cannot delete worker with assignments.");
     }
     workerRepository.delete(worker);
+    minioService.deleteImage(ImageType.WORKER, worker.getId().toString());
+  }
+
+  public String updateWorkerImage(UUID id, MultipartFile image)
+      throws EntityNotFoundException,
+          FileTooBigException,
+          FileTypeNotSupportedException,
+          MinioException {
+    Worker worker = getWorkerById(id);
+    String workerId = worker.getId().toString();
+    minioService.updateImage(ImageType.WORKER, workerId, image);
+    worker.setHasImage(image != null && !image.isEmpty());
+    workerRepository.save(worker);
+    return worker.isHasImage() ? minioService.getImageUrl(ImageType.WORKER, workerId) : null;
+  }
+
+  public String getWorkerImageUrl(UUID id) throws EntityNotFoundException, MinioException {
+    Worker worker = getWorkerById(id);
+    return minioService.getImageUrlIfExists(ImageType.WORKER, worker.getId().toString());
   }
 }

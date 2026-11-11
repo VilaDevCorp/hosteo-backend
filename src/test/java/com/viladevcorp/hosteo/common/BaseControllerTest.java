@@ -5,10 +5,12 @@ import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.viladevcorp.hosteo.repository.UserRepository;
 import com.viladevcorp.hosteo.service.AuthService;
+import com.viladevcorp.hosteo.service.MinioService;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -21,6 +23,8 @@ public abstract class BaseControllerTest {
   @Autowired UserRepository userRepository;
 
   @Autowired protected TestSetupHelper testSetupHelper;
+
+  @MockBean protected MinioService minioService;
 
   @BeforeAll
   public void resetAll() throws Exception {

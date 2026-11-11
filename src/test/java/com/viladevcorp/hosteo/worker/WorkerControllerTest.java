@@ -5,7 +5,9 @@ import static com.viladevcorp.hosteo.common.TestConstants.*;
 import java.util.List;
 import java.util.UUID;
 
+import com.viladevcorp.hosteo.exceptions.FileTooBigException;
 import com.viladevcorp.hosteo.model.dto.WorkerDto;
+import com.viladevcorp.hosteo.model.types.ImageType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -13,6 +15,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,6 +32,10 @@ import com.viladevcorp.hosteo.repository.WorkerRepository;
 import com.viladevcorp.hosteo.utils.ApiResponse;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -416,6 +424,111 @@ class WorkerControllerTest extends BaseControllerTest {
               org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete(
                   "/api/worker/" + UUID.randomUUID()))
           .andExpect(status().isNotFound());
+    }
+  }
+
+  @Nested
+  @DisplayName("Worker image")
+  class WorkerImage {
+    private String workerUrl() {
+      return "/api/worker/" + testSetupHelper.getTestWorkers().get(0).getId() + "/image";
+    }
+
+    @Test
+    void When_UpdateWorkerImage_Ok() throws Exception {
+      TestUtils.injectUserSession(ACTIVE_USER_USERNAME_1, userRepository);
+      UUID id = testSetupHelper.getTestWorkers().get(0).getId();
+      when(minioService.getImageUrl(eq(ImageType.WORKER), eq(id.toString())))
+          .thenReturn("http://minio/worker");
+      MockMultipartFile image =
+          new MockMultipartFile("image", "a.png", "image/png", new byte[10]);
+
+      String resultString =
+          mockMvc
+              .perform(multipart(HttpMethod.PUT, workerUrl()).file(image))
+              .andExpect(status().isOk())
+              .andReturn()
+              .getResponse()
+              .getContentAsString();
+
+      ApiResponse<String> result =
+          objectMapper.readValue(resultString, new TypeReference<ApiResponse<String>>() {});
+      assertEquals("http://minio/worker", result.getData());
+      assertTrue(workerRepository.findById(id).orElseThrow().isHasImage());
+    }
+
+    @Test
+    void When_UpdateWorkerImageWithoutFile_DeletesImage() throws Exception {
+      TestUtils.injectUserSession(ACTIVE_USER_USERNAME_1, userRepository);
+      UUID id = testSetupHelper.getTestWorkers().get(0).getId();
+      Worker worker = workerRepository.findById(id).orElseThrow();
+      worker.setHasImage(true);
+      workerRepository.save(worker);
+
+      mockMvc.perform(multipart(HttpMethod.PUT, workerUrl())).andExpect(status().isOk());
+
+      assertFalse(workerRepository.findById(id).orElseThrow().isHasImage());
+    }
+
+    @Test
+    void When_UpdateWorkerImageTooBig_PayloadTooLarge() throws Exception {
+      TestUtils.injectUserSession(ACTIVE_USER_USERNAME_1, userRepository);
+      doThrow(new FileTooBigException("too big"))
+          .when(minioService)
+          .updateImage(any(), any(), any());
+      MockMultipartFile image =
+          new MockMultipartFile("image", "a.png", "image/png", new byte[10]);
+
+      mockMvc
+          .perform(multipart(HttpMethod.PUT, workerUrl()).file(image))
+          .andExpect(status().isPayloadTooLarge());
+    }
+
+    @Test
+    void When_UpdateWorkerImageNotOwned_NotFound() throws Exception {
+      TestUtils.injectUserSession(ACTIVE_USER_USERNAME_2, userRepository);
+      MockMultipartFile image =
+          new MockMultipartFile("image", "a.png", "image/png", new byte[10]);
+
+      mockMvc
+          .perform(multipart(HttpMethod.PUT, workerUrl()).file(image))
+          .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void When_GetWorkerImage_Ok() throws Exception {
+      TestUtils.injectUserSession(ACTIVE_USER_USERNAME_1, userRepository);
+      UUID id = testSetupHelper.getTestWorkers().get(0).getId();
+      when(minioService.getImageUrlIfExists(ImageType.WORKER, id.toString()))
+          .thenReturn("http://minio/worker");
+
+      String resultString =
+          mockMvc
+              .perform(get(workerUrl()))
+              .andExpect(status().isOk())
+              .andReturn()
+              .getResponse()
+              .getContentAsString();
+
+      ApiResponse<String> result =
+          objectMapper.readValue(resultString, new TypeReference<ApiResponse<String>>() {});
+      assertEquals("http://minio/worker", result.getData());
+    }
+
+    @Test
+    void When_GetWorkerImageNotExists_NotFound() throws Exception {
+      TestUtils.injectUserSession(ACTIVE_USER_USERNAME_1, userRepository);
+      UUID id = testSetupHelper.getTestWorkers().get(0).getId();
+      when(minioService.getImageUrlIfExists(ImageType.WORKER, id.toString())).thenReturn(null);
+
+      mockMvc.perform(get(workerUrl())).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void When_GetWorkerImageNotOwned_NotFound() throws Exception {
+      TestUtils.injectUserSession(ACTIVE_USER_USERNAME_2, userRepository);
+
+      mockMvc.perform(get(workerUrl())).andExpect(status().isNotFound());
     }
   }
 }

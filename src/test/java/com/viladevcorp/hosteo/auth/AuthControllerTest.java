@@ -11,7 +11,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,12 +22,14 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.viladevcorp.hosteo.common.BaseControllerTest;
 import com.viladevcorp.hosteo.common.TestUtils;
+import com.viladevcorp.hosteo.exceptions.FileTypeNotSupportedException;
 import com.viladevcorp.hosteo.model.User;
 import com.viladevcorp.hosteo.model.UserSession;
 import com.viladevcorp.hosteo.model.ValidationCode;
 import com.viladevcorp.hosteo.model.dto.UserDto;
 import com.viladevcorp.hosteo.model.forms.LoginForm;
 import com.viladevcorp.hosteo.model.forms.RegisterForm;
+import com.viladevcorp.hosteo.model.types.ImageType;
 import com.viladevcorp.hosteo.repository.UserRepository;
 import com.viladevcorp.hosteo.repository.UserSessionRepository;
 import com.viladevcorp.hosteo.repository.ValidationCodeRepository;
@@ -36,7 +40,12 @@ import com.viladevcorp.hosteo.utils.ValidationCodeType;
 import jakarta.servlet.http.Cookie;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -452,5 +461,116 @@ class AuthControllerTest extends BaseControllerTest {
     UserDto user = result.getData();
     assertEquals(ACTIVE_USER_EMAIL_1, user.getEmail());
     assertEquals(ACTIVE_USER_USERNAME_1, user.getUsername());
+  }
+
+  @Nested
+  @DisplayName("Profile image")
+  class ProfileImage {
+    @Test
+    void When_UpdateProfileImage_Ok() throws Exception {
+      TestUtils.injectUserSession(ACTIVE_USER_USERNAME_1, userRepository);
+      when(minioService.getImageUrl(eq(ImageType.PROFILE), eq(ACTIVE_USER_USERNAME_1)))
+          .thenReturn("http://minio/profile");
+      MockMultipartFile image =
+          new MockMultipartFile("image", "avatar.png", "image/png", new byte[10]);
+
+      String resultString =
+          mockMvc
+              .perform(multipart(HttpMethod.PUT, "/api/self/image").file(image))
+              .andExpect(status().isOk())
+              .andReturn()
+              .getResponse()
+              .getContentAsString();
+
+      ApiResponse<String> result =
+          objectMapper.readValue(resultString, new TypeReference<ApiResponse<String>>() {});
+      assertEquals("http://minio/profile", result.getData());
+      assertTrue(userRepository.findByUsername(ACTIVE_USER_USERNAME_1).isHasImage());
+    }
+
+    @Test
+    void When_GetSelf_ProfileImageUrlUsesUsername() throws Exception {
+      TestUtils.injectUserSession(ACTIVE_USER_USERNAME_1, userRepository);
+      User user = userRepository.findByUsername(ACTIVE_USER_USERNAME_1);
+      user.setHasImage(true);
+      userRepository.save(user);
+      when(minioService.getImageUrl(ImageType.PROFILE, ACTIVE_USER_USERNAME_1))
+          .thenReturn("http://minio/profile");
+
+      String resultString =
+          mockMvc
+              .perform(get("/api/self"))
+              .andExpect(status().isOk())
+              .andReturn()
+              .getResponse()
+              .getContentAsString();
+
+      ApiResponse<UserDto> result =
+          objectMapper.readValue(resultString, new TypeReference<ApiResponse<UserDto>>() {});
+      assertEquals("http://minio/profile", result.getData().getImageUrl());
+    }
+
+    @Test
+    void When_UpdateProfileImageWithoutFile_DeletesImage() throws Exception {
+      TestUtils.injectUserSession(ACTIVE_USER_USERNAME_1, userRepository);
+      User user = userRepository.findByUsername(ACTIVE_USER_USERNAME_1);
+      user.setHasImage(true);
+      userRepository.save(user);
+
+      mockMvc
+          .perform(multipart(HttpMethod.PUT, "/api/self/image"))
+          .andExpect(status().isOk());
+
+      assertFalse(userRepository.findByUsername(ACTIVE_USER_USERNAME_1).isHasImage());
+    }
+
+    @Test
+    void When_UpdateProfileImageUnsupportedType_UnsupportedMediaType() throws Exception {
+      TestUtils.injectUserSession(ACTIVE_USER_USERNAME_1, userRepository);
+      doThrow(new FileTypeNotSupportedException("not supported"))
+          .when(minioService)
+          .updateImage(any(), any(), any());
+      MockMultipartFile image =
+          new MockMultipartFile("image", "avatar.gif", "image/gif", new byte[10]);
+
+      mockMvc
+          .perform(multipart(HttpMethod.PUT, "/api/self/image").file(image))
+          .andExpect(status().isUnsupportedMediaType());
+    }
+
+    @Test
+    void When_GetProfileImage_Ok() throws Exception {
+      TestUtils.injectUserSession(ACTIVE_USER_USERNAME_1, userRepository);
+      when(minioService.getImageUrlIfExists(ImageType.PROFILE, ACTIVE_USER_USERNAME_1))
+          .thenReturn("http://minio/profile");
+
+      String resultString =
+          mockMvc
+              .perform(get("/api/self/image"))
+              .andExpect(status().isOk())
+              .andReturn()
+              .getResponse()
+              .getContentAsString();
+
+      ApiResponse<String> result =
+          objectMapper.readValue(resultString, new TypeReference<ApiResponse<String>>() {});
+      assertEquals("http://minio/profile", result.getData());
+    }
+
+    @Test
+    void When_GetProfileImageNotExists_NotFound() throws Exception {
+      TestUtils.injectUserSession(ACTIVE_USER_USERNAME_1, userRepository);
+      when(minioService.getImageUrlIfExists(ImageType.PROFILE, ACTIVE_USER_USERNAME_1))
+          .thenReturn(null);
+
+      mockMvc.perform(get("/api/self/image")).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void When_GetProfileImageWithoutSession_NotFound() throws Exception {
+      TestUtils.injectUserSession(null, userRepository);
+
+      mockMvc.perform(get("/api/self/image")).andExpect(status().isNotFound());
+    }
   }
 }

@@ -4,14 +4,18 @@ import jakarta.persistence.EntityNotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.viladevcorp.hosteo.auth.AuthResult;
 import com.viladevcorp.hosteo.auth.AuthResultDto;
@@ -19,6 +23,8 @@ import com.viladevcorp.hosteo.exceptions.AlreadyUsedValidationCodeException;
 import com.viladevcorp.hosteo.exceptions.EmailAlreadyInUseException;
 import com.viladevcorp.hosteo.exceptions.EmptyFormFieldsException;
 import com.viladevcorp.hosteo.exceptions.ExpiredValidationCodeException;
+import com.viladevcorp.hosteo.exceptions.FileTooBigException;
+import com.viladevcorp.hosteo.exceptions.FileTypeNotSupportedException;
 import com.viladevcorp.hosteo.exceptions.IncorrectValidationCodeException;
 import com.viladevcorp.hosteo.exceptions.InvalidCredentialsException;
 import com.viladevcorp.hosteo.exceptions.InvalidJwtException;
@@ -33,11 +39,13 @@ import com.viladevcorp.hosteo.model.forms.LoginForm;
 import com.viladevcorp.hosteo.model.forms.RegisterForm;
 import com.viladevcorp.hosteo.repository.UserRepository;
 import com.viladevcorp.hosteo.service.AuthService;
+import com.viladevcorp.hosteo.service.UserService;
 import com.viladevcorp.hosteo.utils.ApiResponse;
 import com.viladevcorp.hosteo.utils.AuthUtils;
 import com.viladevcorp.hosteo.utils.CodeErrors;
 import com.viladevcorp.hosteo.utils.ValidationCodeType;
 
+import io.minio.errors.MinioException;
 import jakarta.servlet.http.HttpServletResponse;
 
 @RestController
@@ -45,11 +53,14 @@ import jakarta.servlet.http.HttpServletResponse;
 public class AuthController {
 
   private final AuthService authService;
+  private final UserService userService;
   private final UserRepository userRepository;
 
   @Autowired
-  public AuthController(AuthService authService, UserRepository userRepository) {
+  public AuthController(
+      AuthService authService, UserService userService, UserRepository userRepository) {
     this.authService = authService;
+    this.userService = userService;
     this.userRepository = userRepository;
   }
 
@@ -108,6 +119,24 @@ public class AuthController {
     String selfUsername = AuthUtils.getUsername();
     User selfUser = userRepository.findByUsername(selfUsername);
     return ResponseEntity.ok().body(new ApiResponse<>(new UserDto(selfUser)));
+  }
+
+  @PutMapping(path = "/self/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public ResponseEntity<ApiResponse<String>> updateProfileImage(
+      @RequestPart(value = "image", required = false) MultipartFile image)
+      throws FileTooBigException, FileTypeNotSupportedException, MinioException {
+    String imageUrl = userService.updateProfileImage(image);
+    return ResponseEntity.ok().body(new ApiResponse<>(imageUrl));
+  }
+
+  @GetMapping("/self/image")
+  public ResponseEntity<ApiResponse<String>> getProfileImage() throws MinioException {
+    String imageUrl = userService.getProfileImageUrl();
+    if (imageUrl == null) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND)
+          .body(new ApiResponse<>(null, "Profile image not found"));
+    }
+    return ResponseEntity.ok().body(new ApiResponse<>(imageUrl));
   }
 
   @PostMapping("/public/validate/{username}/{validationCode}")
