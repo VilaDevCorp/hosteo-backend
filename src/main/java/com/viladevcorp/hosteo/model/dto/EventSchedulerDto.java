@@ -1,13 +1,12 @@
 package com.viladevcorp.hosteo.model.dto;
 
 import com.viladevcorp.hosteo.model.Event;
-import com.viladevcorp.hosteo.model.types.Alert;
-import com.viladevcorp.hosteo.model.types.EventSource;
+import com.viladevcorp.hosteo.model.types.*;
+
 import java.time.Instant;
 import java.util.*;
 
-import com.viladevcorp.hosteo.model.types.EventState;
-import com.viladevcorp.hosteo.model.types.EventType;
+import com.viladevcorp.hosteo.utils.ImageUrlResolver;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -23,6 +22,11 @@ public class EventSchedulerDto extends BaseEntityDto {
       return;
     }
     this.apartmentName = event.getApartment().getName();
+    this.apartmentImageUrl =
+        ImageUrlResolver.resolve(
+            ImageType.APARTMENT,
+            event.getApartment().getId().toString(),
+            event.getApartment().isHasImage());
     this.frozen = !event.getApartment().isVisible();
     BeanUtils.copyProperties(event, this);
   }
@@ -40,6 +44,8 @@ public class EventSchedulerDto extends BaseEntityDto {
   private String name;
 
   private String apartmentName;
+
+  private String apartmentImageUrl;
 
   private EventSource source;
 
