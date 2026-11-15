@@ -45,6 +45,8 @@ public class TestSetupHelper {
 
   @Autowired AssignmentRepository assignmentRepository;
 
+  @Autowired TransactionRepository transactionRepository;
+
   @Autowired FailedImportedEventRepository importedEventRepository;
 
   private List<User> testUsers;
@@ -82,6 +84,7 @@ public class TestSetupHelper {
 
   public void deleteAll() {
     importedEventRepository.deleteAll();
+    transactionRepository.deleteAll();
     assignmentRepository.deleteAll();
     taskRepository.deleteAll();
     templateRepository.deleteAll();

@@ -39,6 +39,7 @@ public class AssignmentService {
   private final EventRepository eventRepository;
   private final TaskRepository taskRepository;
   private final AssignmentProcessor assignmentProcessor;
+  private final TransactionService transactionService;
 
   @Autowired
   public AssignmentService(
@@ -47,13 +48,15 @@ public class AssignmentService {
       WorkerService workerService,
       EventRepository eventRepository,
       TaskRepository taskRepository,
-      AssignmentProcessor assignmentProcessor) {
+      AssignmentProcessor assignmentProcessor,
+      TransactionService transactionService) {
     this.assignmentRepository = assignmentRepository;
     this.workflowService = workflowService;
     this.workerService = workerService;
     this.eventRepository = eventRepository;
     this.taskRepository = taskRepository;
     this.assignmentProcessor = assignmentProcessor;
+    this.transactionService = transactionService;
   }
 
   public Assignment createAssignment(AssignmentCreateForm form)
@@ -113,6 +116,7 @@ public class AssignmentService {
     assignment = assignmentRepository.save(assignment);
     event.getAssignments().add(assignment);
     workflowService.calculateApartmentState(task.getApartment().getId());
+    transactionService.handleAssignmentChange(assignment, AssignmentState.PENDING, null);
     return assignment;
   }
 
@@ -127,6 +131,8 @@ public class AssignmentService {
           AssignmentStartsBeforeEventEnds,
           EntityFrozenException {
     Assignment assignment = assignmentProcessor.getAssignmentById(form.getId());
+    AssignmentState previousState = assignment.getState();
+    Worker previousWorker = assignment.getWorker();
 
     Event event = assignment.getEvent();
     assignmentProcessor.checkWhetherEventAssignmentsCanBeAltered(event);
@@ -149,6 +155,7 @@ public class AssignmentService {
     assignment.setWorker(worker);
     Assignment result = assignmentRepository.save(assignment);
     workflowService.calculateApartmentState(task.getApartment().getId());
+    transactionService.handleAssignmentChange(result, previousState, previousWorker);
     return result;
   }
 
@@ -227,8 +234,6 @@ public class AssignmentService {
       try {
         assignmentProcessor.executeDeleteAssignmentLogic(assignment.getId());
         successCount++;
-      } catch (EntityNotFoundException e) {
-        errors.add(new AssignmentOperationError(assignment, e.getMessage()));
       } catch (ChangeInAssignmentsOfPastEventException e) {
         errors.add(
             new AssignmentOperationError(
@@ -306,6 +311,7 @@ public class AssignmentService {
     assignmentProcessor.checkWhetherEventAssignmentsCanBeAltered(event);
     assignmentProcessor.checkAssignmentParentsVisible(assignment);
     Apartment apartment = assignment.getTask().getApartment();
+    transactionService.deleteDebt(assignment);
     assignmentRepository.delete(assignment);
     event.getAssignments().remove(assignment);
     workflowService.calculateApartmentState(apartment.getId());

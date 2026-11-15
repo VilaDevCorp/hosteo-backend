@@ -17,7 +17,5 @@ public class WorkerCreateForm {
 
   private Language language;
 
-  private double salary;
-
   private boolean visible = true;
 }

@@ -29,5 +29,7 @@ public class TaskUpdateForm {
 
   @PositiveOrZero private int duration;
 
+  @PositiveOrZero private double cost;
+
   private List<String> steps = new ArrayList<>();
 }

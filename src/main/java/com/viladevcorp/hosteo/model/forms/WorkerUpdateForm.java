@@ -20,6 +20,4 @@ public class WorkerUpdateForm {
   @NotNull @NotBlank private String name;
 
   private Language language;
-
-  private double salary;
 }

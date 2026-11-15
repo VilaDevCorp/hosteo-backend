@@ -28,8 +28,6 @@ public class WorkerDto extends BaseEntityDto {
 
   private Language language;
 
-  private double salary;
-
   private boolean visible;
 
   private String imageUrl;

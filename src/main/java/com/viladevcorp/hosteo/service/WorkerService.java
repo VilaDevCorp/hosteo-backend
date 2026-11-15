@@ -11,6 +11,7 @@ import com.viladevcorp.hosteo.model.forms.WorkerUpdateForm;
 import com.viladevcorp.hosteo.model.types.AssignmentState;
 import com.viladevcorp.hosteo.model.types.ImageType;
 import com.viladevcorp.hosteo.repository.AssignmentRepository;
+import com.viladevcorp.hosteo.repository.TransactionRepository;
 import com.viladevcorp.hosteo.repository.WorkerRepository;
 import com.viladevcorp.hosteo.utils.AuthUtils;
 import com.viladevcorp.hosteo.utils.ServiceUtils;
@@ -34,15 +35,18 @@ public class WorkerService {
 
   private final WorkerRepository workerRepository;
   private final AssignmentRepository assignmentRepository;
+  private final TransactionRepository transactionRepository;
   private final MinioService minioService;
 
   @Autowired
   public WorkerService(
       WorkerRepository workerRepository,
       AssignmentRepository assignmentRepository,
+      TransactionRepository transactionRepository,
       MinioService minioService) {
     this.workerRepository = workerRepository;
     this.assignmentRepository = assignmentRepository;
+    this.transactionRepository = transactionRepository;
     this.minioService = minioService;
   }
 
@@ -120,6 +124,11 @@ public class WorkerService {
         worker.getId(), AuthUtils.getUsername())) {
       throw new EntityHasDependenciesException(
           "Cannot delete worker with assignments.");
+    }
+    if (transactionRepository.existsByWorkerIdAndCreatedByUsername(
+        worker.getId(), AuthUtils.getUsername())) {
+      throw new EntityHasDependenciesException(
+          "Cannot delete worker with transactions.");
     }
     workerRepository.delete(worker);
     minioService.deleteImage(ImageType.WORKER, worker.getId().toString());

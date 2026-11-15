@@ -35,8 +35,6 @@ public class Worker extends BaseEntity {
   @Builder.Default
   private Language language = Language.EN;
 
-  private double salary;
-
   @Builder.Default private boolean visible = true;
 
   @Builder.Default private boolean hasImage = false;

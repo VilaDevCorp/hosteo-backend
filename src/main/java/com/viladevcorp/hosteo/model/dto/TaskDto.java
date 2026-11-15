@@ -31,6 +31,8 @@ public class TaskDto extends BaseEntityDto {
 
   private int duration;
 
+  private double cost;
+
   private List<String> steps = new ArrayList<>();
 
   private boolean visible = true;

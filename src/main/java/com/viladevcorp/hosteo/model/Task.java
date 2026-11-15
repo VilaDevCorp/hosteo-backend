@@ -48,6 +48,9 @@ public class Task extends BaseEntity {
   @Column(nullable = false)
   private int duration;
 
+  @Column(nullable = false)
+  private double cost;
+
   @ManyToOne(optional = true)
   private Apartment apartment;
 
