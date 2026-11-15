@@ -2,18 +2,20 @@ package com.viladevcorp.hosteo.service;
 
 import com.viladevcorp.hosteo.exceptions.DebtOperationNotAllowedException;
 import com.viladevcorp.hosteo.model.Assignment;
+import com.viladevcorp.hosteo.model.PageMetadata;
 import com.viladevcorp.hosteo.model.Transaction;
 import com.viladevcorp.hosteo.model.Worker;
 import com.viladevcorp.hosteo.model.dto.BalanceDto;
 import com.viladevcorp.hosteo.model.forms.TransactionCreateForm;
+import com.viladevcorp.hosteo.model.forms.TransactionSearchForm;
 import com.viladevcorp.hosteo.model.forms.TransactionUpdateForm;
 import com.viladevcorp.hosteo.model.types.AssignmentState;
 import com.viladevcorp.hosteo.repository.TransactionRepository;
 import com.viladevcorp.hosteo.repository.WorkerRepository;
 import com.viladevcorp.hosteo.utils.AuthUtils;
+import com.viladevcorp.hosteo.utils.ServiceUtils;
 import jakarta.persistence.EntityNotFoundException;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -82,10 +84,26 @@ public class TransactionService {
         transactionRepository.delete(transaction);
     }
 
-    public List<Transaction> findTransactions(
-            UUID workerId, Instant startDate, Instant endDate, Boolean isPayment) {
-        return transactionRepository.search(
-                AuthUtils.getUsername(), workerId, startDate, endDate, isPayment);
+    public List<Transaction> findTransactions(TransactionSearchForm form) {
+        return transactionRepository.advancedSearch(
+                AuthUtils.getUsername(),
+                form.getWorkerId(),
+                form.getStartDate(),
+                form.getEndDate(),
+                form.getIsPayment(),
+                ServiceUtils.createPageRequest(form.getPageNumber(), form.getPageSize()));
+    }
+
+    public PageMetadata getTransactionsMetadata(TransactionSearchForm form) {
+        int totalRows =
+                transactionRepository.advancedCount(
+                        AuthUtils.getUsername(),
+                        form.getWorkerId(),
+                        form.getStartDate(),
+                        form.getEndDate(),
+                        form.getIsPayment());
+        int totalPages = ServiceUtils.calculateTotalPages(form.getPageSize(), totalRows);
+        return new PageMetadata(totalPages, totalRows);
     }
 
     public List<BalanceDto> getBalances() {

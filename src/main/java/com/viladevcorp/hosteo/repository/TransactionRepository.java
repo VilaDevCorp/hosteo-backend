@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,13 +22,25 @@ public interface TransactionRepository extends EntityRepository<Transaction> {
           + "AND (:isPayment IS NULL "
           + "     OR (:isPayment = TRUE AND t.assignment IS NULL) "
           + "     OR (:isPayment = FALSE AND t.assignment IS NOT NULL)) "
-          + "ORDER BY t.createdAt DESC")
-  List<Transaction> search(
-      @Param("username") String username,
-      @Param("workerId") UUID workerId,
-      @Param("startDate") Instant startDate,
-      @Param("endDate") Instant endDate,
-      @Param("isPayment") Boolean isPayment);
+          + "ORDER BY t.createdAt DESC, t.id DESC")
+  List<Transaction> advancedSearch(
+      String username,
+      UUID workerId,
+      Instant startDate,
+      Instant endDate,
+      Boolean isPayment,
+      Pageable pageable);
+
+  @Query(
+      "SELECT COUNT(t) FROM Transaction t WHERE t.createdBy.username = :username "
+          + "AND (:workerId IS NULL OR t.worker.id = :workerId) "
+          + "AND (CAST(:startDate AS TIMESTAMP) IS NULL OR t.createdAt >= :startDate) "
+          + "AND (CAST(:endDate AS TIMESTAMP) IS NULL OR t.createdAt <= :endDate) "
+          + "AND (:isPayment IS NULL "
+          + "     OR (:isPayment = TRUE AND t.assignment IS NULL) "
+          + "     OR (:isPayment = FALSE AND t.assignment IS NOT NULL))")
+  int advancedCount(
+      String username, UUID workerId, Instant startDate, Instant endDate, Boolean isPayment);
 
   @Query(
       "SELECT t.worker, COALESCE(SUM(t.amount), 0) FROM Transaction t "

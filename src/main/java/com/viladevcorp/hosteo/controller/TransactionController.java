@@ -1,10 +1,13 @@
 package com.viladevcorp.hosteo.controller;
 
 import com.viladevcorp.hosteo.exceptions.DebtOperationNotAllowedException;
+import com.viladevcorp.hosteo.model.Page;
+import com.viladevcorp.hosteo.model.PageMetadata;
 import com.viladevcorp.hosteo.model.Transaction;
 import com.viladevcorp.hosteo.model.dto.BalanceDto;
 import com.viladevcorp.hosteo.model.dto.TransactionDto;
 import com.viladevcorp.hosteo.model.forms.TransactionCreateForm;
+import com.viladevcorp.hosteo.model.forms.TransactionSearchForm;
 import com.viladevcorp.hosteo.model.forms.TransactionUpdateForm;
 import com.viladevcorp.hosteo.service.TransactionService;
 import com.viladevcorp.hosteo.utils.ApiResponse;
@@ -12,12 +15,10 @@ import com.viladevcorp.hosteo.utils.CodeErrors;
 import com.viladevcorp.hosteo.utils.ValidationUtils;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
-import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -28,7 +29,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
@@ -84,22 +84,19 @@ public class TransactionController {
     }
   }
 
-  @GetMapping("/transactions")
-  public ResponseEntity<ApiResponse<List<TransactionDto>>> getTransactions(
-      @RequestParam(required = false) UUID workerId,
-      @RequestParam(required = false)
-          @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-          Instant startDate,
-      @RequestParam(required = false)
-          @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-          Instant endDate,
-      @RequestParam(required = false) Boolean isPayment) {
-    log.info("[TransactionController.getTransactions] - Fetching transactions");
-    List<TransactionDto> transactions =
-        transactionService.findTransactions(workerId, startDate, endDate, isPayment).stream()
-            .map(TransactionDto::new)
-            .toList();
-    return ResponseEntity.ok().body(new ApiResponse<>(transactions));
+  @PostMapping("/transactions/search")
+  public ResponseEntity<ApiResponse<Page<TransactionDto>>> searchTransactions(
+      @RequestBody TransactionSearchForm form) {
+    log.info("[TransactionController.searchTransactions] - Searching transactions");
+    List<Transaction> transactions = transactionService.findTransactions(form);
+    PageMetadata pageMetadata = transactionService.getTransactionsMetadata(form);
+    Page<TransactionDto> page =
+        new Page<>(
+            transactions.stream().map(TransactionDto::new).toList(),
+            pageMetadata.getTotalPages(),
+            pageMetadata.getTotalRows());
+    log.info("[TransactionController.searchTransactions] - Found {} transactions", transactions.size());
+    return ResponseEntity.ok().body(new ApiResponse<>(page));
   }
 
   @GetMapping("/transactions/balances")

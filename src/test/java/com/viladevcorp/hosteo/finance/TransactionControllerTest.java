@@ -11,12 +11,14 @@ import com.viladevcorp.hosteo.common.TestUtils;
 import com.viladevcorp.hosteo.model.Apartment;
 import com.viladevcorp.hosteo.model.Assignment;
 import com.viladevcorp.hosteo.model.Event;
+import com.viladevcorp.hosteo.model.Page;
 import com.viladevcorp.hosteo.model.Task;
 import com.viladevcorp.hosteo.model.Transaction;
 import com.viladevcorp.hosteo.model.Worker;
 import com.viladevcorp.hosteo.model.dto.BalanceDto;
 import com.viladevcorp.hosteo.model.dto.TransactionDto;
 import com.viladevcorp.hosteo.model.forms.TransactionCreateForm;
+import com.viladevcorp.hosteo.model.forms.TransactionSearchForm;
 import com.viladevcorp.hosteo.model.forms.TransactionUpdateForm;
 import com.viladevcorp.hosteo.model.types.AssignmentState;
 import com.viladevcorp.hosteo.model.types.CategoryEnum;
@@ -185,7 +187,7 @@ class TransactionControllerTest extends BaseControllerTest {
   }
 
   @Test
-  void When_GetTransactions_Then_DebtIncludesTaskAndApartmentNames() throws Exception {
+  void When_SearchTransactions_Then_DebtIncludesTaskAndApartmentNames() throws Exception {
     Assignment assignment = createFinishedEventAssignment(100);
     mockMvc
         .perform(
@@ -196,23 +198,92 @@ class TransactionControllerTest extends BaseControllerTest {
                     + AssignmentState.FINISHED))
         .andExpect(status().isOk());
 
+    TransactionSearchForm form = new TransactionSearchForm();
+    form.setIsPayment(false);
+
     String response =
         mockMvc
-            .perform(get("/api/transactions").param("isPayment", "false"))
+            .perform(
+                post("/api/transactions/search")
+                    .contentType("application/json")
+                    .content(objectMapper.writeValueAsString(form)))
             .andExpect(status().isOk())
             .andReturn()
             .getResponse()
             .getContentAsString();
 
-    ApiResponse<List<TransactionDto>> result =
+    ApiResponse<Page<TransactionDto>> result =
         objectMapper.readValue(
-            response, new TypeReference<ApiResponse<List<TransactionDto>>>() {});
-    assertEquals(1, result.getData().size());
+            response, new TypeReference<ApiResponse<Page<TransactionDto>>>() {});
+    assertEquals(1, result.getData().getContent().size());
 
-    TransactionDto dto = result.getData().get(0);
+    TransactionDto dto = result.getData().getContent().get(0);
     assertEquals(assignment.getId(), dto.getAssignmentId());
     assertEquals(assignment.getTask().getName(), dto.getTaskName());
     assertEquals(assignment.getTask().getApartment().getName(), dto.getApartmentName());
+  }
+
+  @Test
+  void When_SearchTransactions_Then_PaginationMetadataIsReturned() throws Exception {
+    Worker worker = createWorker("Paged Worker");
+    createPayment(worker.getId(), 10);
+    createPayment(worker.getId(), 20);
+    createPayment(worker.getId(), 30);
+
+    TransactionSearchForm form = new TransactionSearchForm();
+    form.setWorkerId(worker.getId());
+    form.setPageNumber(0);
+    form.setPageSize(2);
+
+    String response =
+        mockMvc
+            .perform(
+                post("/api/transactions/search")
+                    .contentType("application/json")
+                    .content(objectMapper.writeValueAsString(form)))
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+
+    ApiResponse<Page<TransactionDto>> result =
+        objectMapper.readValue(
+            response, new TypeReference<ApiResponse<Page<TransactionDto>>>() {});
+    assertEquals(2, result.getData().getContent().size());
+    assertEquals(2, result.getData().getTotalPages());
+    assertEquals(3, result.getData().getTotalRows());
+  }
+
+  @Test
+  void When_SearchTransactions_Then_FiltersByDateRange() throws Exception {
+    Worker worker = createWorker("Dated Worker");
+    createPayment(worker.getId(), 40);
+
+    TransactionSearchForm inRange = new TransactionSearchForm();
+    inRange.setStartDate(Instant.now().minusSeconds(3600));
+    inRange.setEndDate(Instant.now().plusSeconds(3600));
+    assertEquals(1, searchTransactions(inRange).getData().getTotalRows());
+
+    TransactionSearchForm outOfRange = new TransactionSearchForm();
+    outOfRange.setStartDate(Instant.now().minusSeconds(7200));
+    outOfRange.setEndDate(Instant.now().minusSeconds(3600));
+    assertEquals(0, searchTransactions(outOfRange).getData().getTotalRows());
+  }
+
+  private ApiResponse<Page<TransactionDto>> searchTransactions(TransactionSearchForm form)
+      throws Exception {
+    String response =
+        mockMvc
+            .perform(
+                post("/api/transactions/search")
+                    .contentType("application/json")
+                    .content(objectMapper.writeValueAsString(form)))
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+    return objectMapper.readValue(
+        response, new TypeReference<ApiResponse<Page<TransactionDto>>>() {});
   }
 
   @Test
