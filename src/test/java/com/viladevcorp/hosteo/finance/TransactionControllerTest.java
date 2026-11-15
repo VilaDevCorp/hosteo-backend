@@ -142,10 +142,11 @@ class TransactionControllerTest extends BaseControllerTest {
     Transaction transaction = createPayment(worker.getId(), 50);
 
     TransactionUpdateForm form = new TransactionUpdateForm();
+    form.setId(transaction.getId());
     form.setAmount(80);
     mockMvc
         .perform(
-            put("/api/transactions/" + transaction.getId())
+            put("/api/transactions")
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(form)))
         .andExpect(status().isOk());
@@ -153,6 +154,18 @@ class TransactionControllerTest extends BaseControllerTest {
     Transaction updated = transactionRepository.findById(transaction.getId()).orElse(null);
     assertNotNull(updated);
     assertEquals(-80.0, updated.getAmount());
+  }
+
+  @Test
+  void When_UpdatePaymentWithoutId_Then_BadRequest() throws Exception {
+    TransactionUpdateForm form = new TransactionUpdateForm();
+    form.setAmount(80);
+    mockMvc
+        .perform(
+            put("/api/transactions")
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(form)))
+        .andExpect(status().isBadRequest());
   }
 
   @Test
@@ -197,6 +210,7 @@ class TransactionControllerTest extends BaseControllerTest {
                     + "/state/"
                     + AssignmentState.FINISHED))
         .andExpect(status().isOk());
+    createPayment(assignment.getWorker().getId(), 25);
 
     TransactionSearchForm form = new TransactionSearchForm();
     form.setIsPayment(false);
@@ -216,6 +230,7 @@ class TransactionControllerTest extends BaseControllerTest {
         objectMapper.readValue(
             response, new TypeReference<ApiResponse<Page<TransactionDto>>>() {});
     assertEquals(1, result.getData().getContent().size());
+    assertEquals(1, result.getData().getTotalRows());
 
     TransactionDto dto = result.getData().getContent().get(0);
     assertEquals(assignment.getId(), dto.getAssignmentId());
@@ -384,10 +399,11 @@ class TransactionControllerTest extends BaseControllerTest {
     Transaction debt = transactionRepository.findAll().get(0);
 
     TransactionUpdateForm form = new TransactionUpdateForm();
+    form.setId(debt.getId());
     form.setAmount(120);
     mockMvc
         .perform(
-            put("/api/transactions/" + debt.getId())
+            put("/api/transactions")
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(form)))
         .andExpect(status().isConflict());

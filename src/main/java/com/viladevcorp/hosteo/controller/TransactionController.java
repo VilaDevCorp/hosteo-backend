@@ -61,19 +61,17 @@ public class TransactionController {
     }
   }
 
-  @PutMapping("/transactions/{transactionId}")
+  @PutMapping("/transactions")
   public ResponseEntity<ApiResponse<TransactionDto>> updatePayment(
-      @PathVariable UUID transactionId,
-      @Valid @RequestBody TransactionUpdateForm form,
-      BindingResult bindingResult) {
-    log.info("[TransactionController.updatePayment] - Updating payment: {}", transactionId);
+      @Valid @RequestBody TransactionUpdateForm form, BindingResult bindingResult) {
+    log.info("[TransactionController.updatePayment] - Updating payment: {}", form.getId());
     ResponseEntity<ApiResponse<TransactionDto>> validationResponse =
         ValidationUtils.handleFormValidation(bindingResult);
     if (validationResponse != null) {
       return validationResponse;
     }
     try {
-      Transaction transaction = transactionService.updatePayment(transactionId, form);
+      Transaction transaction = transactionService.updatePayment(form);
       return ResponseEntity.ok().body(new ApiResponse<>(new TransactionDto(transaction)));
     } catch (EntityNotFoundException e) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)

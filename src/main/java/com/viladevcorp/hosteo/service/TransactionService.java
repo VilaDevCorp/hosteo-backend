@@ -62,9 +62,9 @@ public class TransactionService {
     /**
      * Updates a payment. Debts cannot be updated from the public API.
      */
-    public Transaction updatePayment(UUID id, TransactionUpdateForm form)
+    public Transaction updatePayment(TransactionUpdateForm form)
             throws EntityNotFoundException, DebtOperationNotAllowedException {
-        Transaction transaction = getTransactionById(id);
+        Transaction transaction = getTransactionById(form.getId());
         if (transaction.getAssignment() != null) {
             throw new DebtOperationNotAllowedException("Debts cannot be updated.");
         }
