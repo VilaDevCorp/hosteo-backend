@@ -34,15 +34,18 @@ public class AssignmentProcessor {
   private final AssignmentRepository assignmentRepository;
   private final WorkflowService workflowService;
   private final EventRepository eventRepository;
+  private final TransactionService transactionService;
 
   @Autowired
   public AssignmentProcessor(
       AssignmentRepository assignmentRepository,
       WorkflowService workflowService,
-      EventRepository eventRepository) {
+      EventRepository eventRepository,
+      TransactionService transactionService) {
     this.assignmentRepository = assignmentRepository;
     this.workflowService = workflowService;
     this.eventRepository = eventRepository;
+    this.transactionService = transactionService;
   }
 
   public void validateAssignment(
@@ -219,6 +222,7 @@ public class AssignmentProcessor {
     checkWhetherEventAssignmentsCanBeAltered(event);
     checkAssignmentParentsVisible(assignment);
     Apartment apartment = assignment.getTask().getApartment();
+    transactionService.deleteDebt(assignment);
     assignmentRepository.delete(assignment);
     event.getAssignments().remove(assignment);
     workflowService.calculateApartmentState(apartment.getId());
@@ -248,9 +252,12 @@ public class AssignmentProcessor {
         assignment.getTask(),
         assignment.getWorker());
 
+    AssignmentState previousState = assignment.getState();
+    Worker previousWorker = assignment.getWorker();
     assignment.setState(newState);
     Assignment result = assignmentRepository.save(assignment);
     workflowService.calculateApartmentState(assignment.getTask().getApartment().getId());
+    transactionService.handleAssignmentChange(result, previousState, previousWorker);
     return result;
   }
 

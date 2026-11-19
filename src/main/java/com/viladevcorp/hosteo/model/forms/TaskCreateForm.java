@@ -26,6 +26,8 @@ public class TaskCreateForm {
 
   @PositiveOrZero private int duration;
 
+  @PositiveOrZero private double cost;
+
   @NotNull private TaskType type;
 
   private List<String> steps = new ArrayList<>();

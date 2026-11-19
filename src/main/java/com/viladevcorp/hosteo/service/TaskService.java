@@ -65,6 +65,7 @@ public class TaskService {
             .name(form.getName())
             .category(form.getCategory())
             .duration(form.getDuration())
+            .cost(form.getCost())
             .type(form.getType())
             .apartment(apartment)
             .steps(form.getSteps())

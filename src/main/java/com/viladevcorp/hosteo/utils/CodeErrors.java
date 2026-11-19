@@ -41,5 +41,7 @@ public class CodeErrors {
 
   public static final String ENTITY_FROZEN = "ENTITY_FROZEN";
 
+  public static final String DEBT_OPERATION_NOT_ALLOWED = "DEBT_OPERATION_NOT_ALLOWED";
+
   public static final String UNEXPECTED_ERROR = "UNEXPECTED_ERROR";
 }
