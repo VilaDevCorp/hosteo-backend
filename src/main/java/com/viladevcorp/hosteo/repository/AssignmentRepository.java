@@ -77,6 +77,21 @@ public interface AssignmentRepository extends EntityRepository<Assignment> {
       String username, UUID apartmentId, String state, Instant startDate, Instant endDate);
 
   @Query(
+      "SELECT a FROM Assignment a "
+          + "JOIN FETCH a.worker w "
+          + "JOIN FETCH a.task t "
+          + "LEFT JOIN FETCH t.apartment "
+          + "LEFT JOIN FETCH a.event "
+          + "WHERE a.createdBy.username = :username "
+          + "AND a.startDate >= :startDate "
+          + "AND a.startDate < :endDate "
+          + "ORDER BY w.name ASC, a.startDate ASC")
+  List<Assignment> findSchedulerAssignments(
+      @Param("username") String username,
+      @Param("startDate") Instant startDate,
+      @Param("endDate") Instant endDate);
+
+  @Query(
       "SELECT a FROM Assignment a WHERE a.createdBy.username = :username  "
           + "AND a.id IN :ids ORDER BY a.startDate ASC ")
   List<Assignment> findInIdsAndCreatedByUsername(Set<UUID> ids, String username);

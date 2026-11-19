@@ -12,7 +12,9 @@ import com.viladevcorp.hosteo.common.TestUtils;
 import com.viladevcorp.hosteo.model.*;
 import com.viladevcorp.hosteo.model.dto.AlertInfo;
 import com.viladevcorp.hosteo.model.dto.AlertItem;
+import com.viladevcorp.hosteo.model.dto.AssignmentDto;
 import com.viladevcorp.hosteo.model.dto.EventSchedulerDto;
+import com.viladevcorp.hosteo.model.dto.WorkerAssignmentDto;
 import com.viladevcorp.hosteo.model.types.*;
 import com.viladevcorp.hosteo.repository.*;
 import com.viladevcorp.hosteo.utils.ApiResponse;
@@ -235,6 +237,80 @@ class WorkflowControllerTest extends BaseControllerTest {
       assertEquals(eventIn3Days.getId(), yellow.getEvent().getId());
       assertEquals(eventIn3DaysName, yellow.getEvent().getName());
       assertEquals(eventIn1Days.getId(), yellow.getPrevEvent().getId());
+    }
+  }
+
+  @Nested
+  @DisplayName("Get scheduler assignments")
+  class SchedulerAssignments {
+
+    @Test
+    void When_GetSchedulerAssignments_GroupedByWorkerOrderedByNameAndStartDate()
+        throws Exception {
+      TestUtils.injectUserSession(ACTIVE_USER_USERNAME_1, userRepository);
+
+      // resetAssignments() creates, for the test user:
+      //   John 1 -> 2025-11-26 10:00, 2025-11-26 14:00, 2026-01-16 16:00
+      //   John 2 -> 2025-12-06 12:00, 2025-12-06 16:00
+      String resultString =
+          mockMvc
+              .perform(
+                  get("/api/scheduler/assignments")
+                      .param("startDate", "01-11-2025")
+                      .param("endDate", "31-12-2025"))
+              .andExpect(status().isOk())
+              .andReturn()
+              .getResponse()
+              .getContentAsString();
+
+      TypeReference<ApiResponse<List<WorkerAssignmentDto>>> typeReference =
+          new TypeReference<>() {};
+      ApiResponse<List<WorkerAssignmentDto>> result =
+          objectMapper.readValue(resultString, typeReference);
+
+      List<WorkerAssignmentDto> workers = result.getData();
+      assertNotNull(workers);
+      assertEquals(2, workers.size());
+
+      // Worker groups are ordered alphabetically by name.
+      assertEquals(CREATED_WORKER_NAME_1, workers.get(0).getWorker().getName());
+      assertEquals(CREATED_WORKER_NAME_2, workers.get(1).getWorker().getName());
+
+      // Assignments are ordered by start date and the out-of-range one is excluded.
+      List<AssignmentDto> john1Assignments = workers.get(0).getAssignments();
+      assertEquals(2, john1Assignments.size());
+      assertTrue(
+          john1Assignments.get(0).getStartDate().isBefore(john1Assignments.get(1).getStartDate()));
+
+      List<AssignmentDto> john2Assignments = workers.get(1).getAssignments();
+      assertEquals(2, john2Assignments.size());
+      assertTrue(
+          john2Assignments.get(0).getStartDate().isBefore(john2Assignments.get(1).getStartDate()));
+
+      assertEquals(4, workers.stream().mapToInt(w -> w.getAssignments().size()).sum());
+    }
+
+    @Test
+    void When_InvalidDates_ReturnBadRequest() throws Exception {
+      TestUtils.injectUserSession(ACTIVE_USER_USERNAME_1, userRepository);
+
+      mockMvc
+          .perform(
+              get("/api/scheduler/assignments")
+                  .param("startDate", "not-a-date")
+                  .param("endDate", "31-12-2025"))
+          .andExpect(status().isBadRequest());
+
+      mockMvc
+          .perform(
+              get("/api/scheduler/assignments")
+                  .param("startDate", "31-12-2025")
+                  .param("endDate", "01-11-2025"))
+          .andExpect(status().isBadRequest());
+
+      mockMvc
+          .perform(get("/api/scheduler/assignments").param("startDate", "01-11-2025"))
+          .andExpect(status().isBadRequest());
     }
   }
 }
