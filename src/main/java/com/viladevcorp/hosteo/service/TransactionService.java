@@ -1,10 +1,7 @@
 package com.viladevcorp.hosteo.service;
 
 import com.viladevcorp.hosteo.exceptions.DebtOperationNotAllowedException;
-import com.viladevcorp.hosteo.model.Assignment;
-import com.viladevcorp.hosteo.model.PageMetadata;
-import com.viladevcorp.hosteo.model.Transaction;
-import com.viladevcorp.hosteo.model.Worker;
+import com.viladevcorp.hosteo.model.*;
 import com.viladevcorp.hosteo.model.dto.BalanceDto;
 import com.viladevcorp.hosteo.model.forms.TransactionCreateForm;
 import com.viladevcorp.hosteo.model.forms.TransactionSearchForm;
@@ -70,6 +67,18 @@ public class TransactionService {
         }
         transaction.setAmount(-form.getAmount());
         return transactionRepository.save(transaction);
+    }
+
+    /**
+     * Gets a transaction
+     */
+    public Transaction getTransactionById(UUID id) throws EntityNotFoundException {
+        Optional<Transaction> result = transactionRepository.findById(id, AuthUtils.getUsername());
+        if (result.isEmpty()) {
+            throw new EntityNotFoundException("Transaction not found with id: " + id);
+        } else {
+            return result.get();
+        }
     }
 
     /**
@@ -181,13 +190,5 @@ public class TransactionService {
                             transaction.setWorker(assignment.getWorker());
                             transactionRepository.save(transaction);
                         });
-    }
-
-    private Transaction getTransactionById(UUID id) throws EntityNotFoundException {
-        Optional<Transaction> result = transactionRepository.findById(id, AuthUtils.getUsername());
-        if (result.isEmpty()) {
-            throw new EntityNotFoundException("Transaction not found with id: " + id);
-        }
-        return result.get();
     }
 }

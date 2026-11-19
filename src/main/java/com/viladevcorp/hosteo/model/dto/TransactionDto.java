@@ -19,7 +19,7 @@ public class TransactionDto extends BaseEntityDto {
     BeanUtils.copyProperties(transaction, this, "worker", "assignment");
     this.worker = new WorkerDto(transaction.getWorker());
     if (transaction.getAssignment() != null) {
-      this.assignmentId = transaction.getAssignment().getId();
+      this.assignment = new AssignmentDto(transaction.getAssignment());
       this.taskName = transaction.getAssignment().getTask().getName();
       if (transaction.getAssignment().getTask().getApartment() != null) {
         this.apartmentName = transaction.getAssignment().getTask().getApartment().getName();
@@ -31,7 +31,7 @@ public class TransactionDto extends BaseEntityDto {
 
   private double amount;
 
-  private UUID assignmentId;
+  private AssignmentDto assignment;
 
   private String taskName;
 

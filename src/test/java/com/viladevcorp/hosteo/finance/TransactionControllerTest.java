@@ -233,7 +233,7 @@ class TransactionControllerTest extends BaseControllerTest {
     assertEquals(1, result.getData().getTotalRows());
 
     TransactionDto dto = result.getData().getContent().get(0);
-    assertEquals(assignment.getId(), dto.getAssignmentId());
+    assertEquals(assignment.getId(), dto.getAssignment().getId());
     assertEquals(assignment.getTask().getName(), dto.getTaskName());
     assertEquals(assignment.getTask().getApartment().getName(), dto.getApartmentName());
   }
