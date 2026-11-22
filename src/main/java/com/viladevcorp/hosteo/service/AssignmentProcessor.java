@@ -58,10 +58,13 @@ public class AssignmentProcessor {
       Worker worker)
       throws DuplicatedEventForTaskException,
           NotAvailableDatesException,
+          InvalidDateRangeException,
           CompleteTaskOnNotFinishedEventException,
           EntityNotFoundException,
           AssignmentStartsBeforeEventEnds,
           AssignmentEndsAfterNextEventStarts {
+
+    ServiceUtils.validateDateRange(startDate, endDate);
 
     UUID apartmentId = task.getApartment().getId();
     // Validate that apartment is available in the selected dates (not events nor
@@ -233,6 +236,7 @@ public class AssignmentProcessor {
       throws EntityNotFoundException,
           DuplicatedEventForTaskException,
           NotAvailableDatesException,
+          InvalidDateRangeException,
           CompleteTaskOnNotFinishedEventException,
           ChangeInAssignmentsOfPastEventException,
           AssignChangeLastFinishedEventWhenAnotherEventInProgress,

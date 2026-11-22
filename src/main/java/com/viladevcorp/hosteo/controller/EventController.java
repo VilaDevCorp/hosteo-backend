@@ -59,6 +59,9 @@ public class EventController {
     } catch (NotAvailableDatesException e) {
       return ResponseEntity.status(HttpStatus.CONFLICT)
           .body(new ApiResponse<>(CodeErrors.NOT_AVAILABLE_DATES, e.getMessage()));
+    } catch (InvalidDateRangeException e) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body(new ApiResponse<>(CodeErrors.INVALID_DATE_RANGE, e.getMessage()));
     } catch (EntityFrozenException e) {
       return ResponseEntity.status(HttpStatus.CONFLICT)
           .body(new ApiResponse<>(CodeErrors.ENTITY_FROZEN, e.getMessage()));
@@ -106,6 +109,9 @@ public class EventController {
     } catch (NotAvailableDatesException e) {
       return ResponseEntity.status(HttpStatus.CONFLICT)
           .body(new ApiResponse<>(CodeErrors.NOT_AVAILABLE_DATES, e.getMessage()));
+    } catch (InvalidDateRangeException e) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body(new ApiResponse<>(CodeErrors.INVALID_DATE_RANGE, e.getMessage()));
     } catch (EntityFrozenException e) {
       return ResponseEntity.status(HttpStatus.CONFLICT)
           .body(new ApiResponse<>(CodeErrors.ENTITY_FROZEN, e.getMessage()));

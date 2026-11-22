@@ -247,6 +247,8 @@ public class ImportService {
   private String mapError(Exception e) {
     if (e instanceof NotAvailableDatesException) {
       return CodeErrors.NOT_AVAILABLE_DATES;
+    } else if (e instanceof InvalidDateRangeException) {
+      return CodeErrors.INVALID_DATE_RANGE;
     } else if (e instanceof PrevOfInProgressCannotBePendingOrInProgress) {
       return CodeErrors.PREV_OF_INPROGRESS_CANNOT_BE_PENDING_OR_INPROGRESS;
     } else if (e instanceof PrevOfFinishedCannotBeNotPendingOrInProgress) {

@@ -60,6 +60,10 @@ public class AssignmentController {
       log.error("[AssignmentController] - NotAvailableDatesException: {}", e.getMessage());
       return ResponseEntity.status(HttpStatus.CONFLICT)
           .body(new ApiResponse<>(CodeErrors.NOT_AVAILABLE_DATES, e.getMessage()));
+    } catch (InvalidDateRangeException e) {
+      log.error("[AssignmentController] - InvalidDateRangeException: {}", e.getMessage());
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body(new ApiResponse<>(CodeErrors.INVALID_DATE_RANGE, e.getMessage()));
     } catch (CompleteTaskOnNotFinishedEventException e) {
       log.error(
           "[AssignmentController] - CompleteTaskOnNotFinishedEventException: {}", e.getMessage());

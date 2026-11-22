@@ -120,11 +120,14 @@ public class EventProcessor {
   public Event executeCreateEventLogic(EventCreateForm form)
       throws EntityNotFoundException,
           NotAvailableDatesException,
+          InvalidDateRangeException,
           PrevOfInProgressCannotBePendingOrInProgress,
           PrevOfFinishedCannotBeNotPendingOrInProgress,
           NextOfPendingCannotBeInprogressOrFinished,
           NextOfInProgressCannotBeFinishedOrInProgress,
           EntityFrozenException {
+    ServiceUtils.validateDateRange(form.getStartDate(), form.getEndDate());
+
     Optional<Apartment> apartmentOpt =
         apartmentRepository.findById(form.getApartmentId(), AuthUtils.getUsername());
     if (apartmentOpt.isEmpty()) {

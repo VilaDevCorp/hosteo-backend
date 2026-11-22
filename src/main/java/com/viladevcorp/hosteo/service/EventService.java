@@ -52,6 +52,7 @@ public class EventService {
   public Event createEvent(EventCreateForm form)
       throws EntityNotFoundException,
           NotAvailableDatesException,
+          InvalidDateRangeException,
           PrevOfInProgressCannotBePendingOrInProgress,
           PrevOfFinishedCannotBeNotPendingOrInProgress,
           NextOfPendingCannotBeInprogressOrFinished,
@@ -63,11 +64,14 @@ public class EventService {
   public Event updateEvent(EventUpdateForm form)
       throws EntityNotFoundException,
           NotAvailableDatesException,
+          InvalidDateRangeException,
           PrevOfInProgressCannotBePendingOrInProgress,
           PrevOfFinishedCannotBeNotPendingOrInProgress,
           NextOfPendingCannotBeInprogressOrFinished,
           NextOfInProgressCannotBeFinishedOrInProgress,
           EntityFrozenException {
+    ServiceUtils.validateDateRange(form.getStartDate(), form.getEndDate());
+
     Event event = getEventById(form.getId());
     if (event.getApartment() != null && !event.getApartment().isVisible()) {
       throw new EntityFrozenException("Cannot update an event of a hidden apartment.");

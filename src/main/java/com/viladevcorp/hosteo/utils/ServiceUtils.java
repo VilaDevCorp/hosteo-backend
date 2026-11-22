@@ -1,5 +1,6 @@
 package com.viladevcorp.hosteo.utils;
 
+import com.viladevcorp.hosteo.exceptions.InvalidDateRangeException;
 import com.viladevcorp.hosteo.model.Assignment;
 import com.viladevcorp.hosteo.model.Event;
 import com.viladevcorp.hosteo.repository.AssignmentRepository;
@@ -15,6 +16,13 @@ import java.util.UUID;
 public class ServiceUtils {
   public static int calculateTotalPages(int pageSize, long totalRows) {
     return pageSize > 0 ? ((Double) Math.ceil((double) totalRows / pageSize)).intValue() : 1;
+  }
+
+  public static void validateDateRange(Instant startDate, Instant endDate)
+      throws InvalidDateRangeException {
+    if (startDate == null || endDate == null || !endDate.isAfter(startDate)) {
+      throw new InvalidDateRangeException("The end date must be after the start date.");
+    }
   }
 
   public static PageRequest createPageRequest(int pageNumber, int pageSize) {
